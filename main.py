@@ -238,11 +238,11 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         elif reg_type == 'ANN':
             # Fitting ANN to the dataset
             from keras.wrappers.scikit_learn import KerasRegressor
-            regressor = KerasRegressor(build_fn=baseline_model, epochs=1000, batch_size=5, verbose=0)
+            regressor = KerasRegressor(build_fn=baseline_model, epochs=1000, batch_size=5, verbose=False)
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'LSTM':
             from keras.wrappers.scikit_learn import KerasRegressor
-            regressor = KerasRegressor(build_fn=lstm_model, epochs=1000, batch_size=5, verbose=0)
+            regressor = KerasRegressor(build_fn=lstm_model, epochs=1000, batch_size=5, verbose=False)
             # pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
             pipeline = Pipeline([('regressor', regressor)])
 
