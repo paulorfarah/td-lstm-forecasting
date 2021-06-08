@@ -238,11 +238,11 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         elif reg_type == 'ANN':
             # Fitting ANN to the dataset
             from keras.wrappers.scikit_learn import KerasRegressor
-            regressor = KerasRegressor(build_fn=baseline_model, epochs=1000, batch_size=5, verbose=True)
+            regressor = KerasRegressor(build_fn=baseline_model, epochs=1000, batch_size=5, verbose=False)
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'LSTM':
             from keras.wrappers.scikit_learn import KerasRegressor
-            regressor = KerasRegressor(build_fn=lstm_model, epochs=1000, batch_size=5, verbose=True)
+            regressor = KerasRegressor(build_fn=lstm_model, epochs=1000, batch_size=5, verbose=False)
             # pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
             pipeline = Pipeline([('regressor', regressor)])
 
@@ -324,7 +324,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             #for reg_type in ['RandomForestRegressor', 'LSTM']:
                 regressor = create_regressor(reg_type, X, Y, project, versions_ahead)
 
-    print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead)
+    print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET)
 
 
 def read_dataset(VERSIONS_AHEAD, WINDOW_SIZE):
@@ -352,8 +352,8 @@ def read_td_dataset(VERSIONS_AHEAD, WINDOW_SIZE):
     Y = data.iloc[:, data.columns == 'forecasted_total_principal'].values
     return X, Y, METRIC_KEYS_SDK4ED
 
-def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead):
-    for project in ['apache_kafka_measures']:
+def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET):
+    for project in DATASET:
         print('**************** %s ****************' % project)
         print(results[project][versions_ahead][reg_type])
         for reg_type in ['RandomForestRegressor','LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf',
