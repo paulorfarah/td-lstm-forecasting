@@ -12,7 +12,7 @@ from keras.layers import LSTM
 from math import sqrt
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from tensorflow.python.ops.metrics_impl import root_mean_squared_error
-import mysql.connector as connection
+#import mysql.connector as connection
 
 
 def score_lstm(estimator, X, y, scoring, cv):
@@ -320,8 +320,8 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
 
 
 
-            # for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor']:
-            for reg_type in ['RandomForestRegressor', 'LSTM']:
+            for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
+            #for reg_type in ['RandomForestRegressor', 'LSTM']:
                 regressor = create_regressor(reg_type, X, Y, project, versions_ahead)
 
     print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead)
@@ -352,23 +352,12 @@ def read_td_dataset(VERSIONS_AHEAD, WINDOW_SIZE):
     Y = data.iloc[:, data.columns == 'forecasted_total_principal'].values
     return X, Y, METRIC_KEYS_SDK4ED
 
-def read_refactoring_dataset():
-    try:
-        mydb = connection.connect(host="localhost", database='Student', user="root", passwd="root", use_pure=True)
-        query = "Select * from studentdetails;"
-        result_dataFrame = pd.read_sql(query, mydb)
-        mydb.close()  # close the connectionexcept Exception as e:
-        mydb.close()
-        # print(str(e))
-    except:
-        print(sys.exc_info())
-
 def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead):
     for project in ['apache_kafka_measures']:
         print('**************** %s ****************' % project)
         print(results[project][versions_ahead][reg_type])
-        for reg_type in ['RandomForestRegressor', 'LSTM']: #, 'LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf',
-                         #'SVR_linear', 'RandomForestRegressor']:
+        for reg_type in ['RandomForestRegressor','LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf',
+                         'SVR_linear', 'RandomForestRegressor', 'LSTM']:
             print('================ %s ================' % reg_type)
             for versions_ahead in VERSIONS_AHEAD:
                 # Print scores
