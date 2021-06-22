@@ -39,17 +39,6 @@ def score_lstm(estimator, X, y, scoring, cv):
     estimator.fit(X_train, y_train)
     y_pred = estimator.predict(X_test)
 
-    # scorer = {'neg_mean_absolute_error': 'neg_mean_absolute_error',
-    #           'neg_mean_squared_error': 'neg_mean_squared_error', 'r2': 'r2',
-    #           'mean_absolute_percentage_error': make_scorer(mean_absolute_percentage_error,
-    #                                                         greater_is_better=False),
-    #           'root_mean_squared_error': make_scorer(root_mean_squared_error, greater_is_better=False)}
-
-    print('X_test: ', X_test)
-    print('y:', y.shape)
-    print('y_train:', y_train.shape)
-    print('ytest: ', y_test.shape)
-    print('y_pred:', y_pred.shape)
     scoring['neg_mean_absolute_error'] = mean_absolute_error(y_test, y_pred)
     scoring['neg_mean_squared_error'] = mean_squared_error(y_test, y_pred)
     scoring['r2'] = r2_score(y_test, y_pred)
@@ -68,11 +57,10 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
     Returns:
         Pandas DataFrame of series framed for supervised learning.
     """
-    print("dataset")
+    print("series_to_supervised")
 
     n_vars = 1 if type(data) is list else data.shape[1]
     df = pd.DataFrame(data)
-    print(df.head(5))
     cols, names = list(), list()
     # input sequence (t-n, ... t-1)
     for i in range(n_in, 0, -1):
@@ -95,43 +83,6 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
         agg.dropna(inplace=True)
     return agg
 
-def series_to_supervised_recurrent(data, n_in=1, n_out=1, dropnan=True):
-    """
-    Frame a time series as a supervised learning dataset.
-    Arguments:
-        data: Sequence of observations as a list or NumPy array.
-        n_in: Number of lag observations as input (X). (WINDOW_SIZE)
-        n_out: Number of observations as output (y).
-        dropnan: Boolean whether or not to drop rows with NaN values.
-    Returns:
-        Pandas DataFrame of series framed for supervised learning.
-    """
-    print("dataset")
-
-    n_vars = 1 if type(data) is list else data.shape[1]
-    df = pd.DataFrame(data)
-    print(df.head(5))
-    cols, names = list(), list()
-    # input sequence (t-n, ... t-1)
-    for i in range(n_in, 0, -1):
-        cols.append(df.shift(i))
-        names += [('var%d(t-%d)' % (j + 1, i)) for j in range(n_vars)]
-    
-    # forecast sequence (t, t+1, ... t+n)
-    for i in range(0, n_out):
-        cols.append(df.shift(-i))
-        if i == 0:
-            names += [('var%d(t)' % (j + 1)) for j in range(n_vars)]
-        else:
-            names += [('var%d(t+%d)' % (j + 1, i)) for j in range(n_vars)]
-    # put it all together
-    
-    agg = pd.concat(cols, axis=1)
-    agg.columns = names
-    # drop rows with NaN values
-    if dropnan:
-        agg.dropna(inplace=True)
-    return agg
 
 def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
 
@@ -164,23 +115,16 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             # In keras you need to pass (timesteps, input_dim) for input_shape argument.
 
             model = Sequential()
-            model.add(LSTM(250, input_shape=(3, 3), kernel_initializer='normal', activation='relu'))
+            model.add(LSTM(250, input_shape=(3, 3), kernel_initializer='normal', activation='relu', return_sequences=True))
+            model.add(Dropout(0.2))
+            model.add(LSTM(128,return_sequences=True))
+            model.add(Dropout(0.2))
+            model.add(LSTM(64))
+            model.add(Dropout(0.2))
             model.add(Dense(1, kernel_initializer='normal'))
-            # Compile model
             model.compile(loss='mean_squared_error', optimizer='adam')
             return model
-            #print("model dim: ", input_shape, output_dim)
-            ##model = Sequential()
-            #model.add(GRU(256, input_shape=input_shape, return_sequences=True))
-            #model.add(Dropout(dropout))
-            #model.add(GRU(128, return_sequences=True))
-            #model.add(Dropout(dropout))
-            #model.add(GRU(64))
-            #model.add(Dropout(dropout))
-            #model.add(Dense(output_dim, activation='softmax'))
-            #model.summary()
-            #model.compile(loss='mse', optimizer='adam')
-            #return model
+            
 
         # Create the regressor model
         if reg_type == 'LinearRegression':
@@ -225,7 +169,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'LSTM':
             from keras.wrappers.scikit_learn import KerasRegressor
-            regressor = KerasRegressor(build_fn=lstm_model, epochs=1000, batch_size=5, verbose=True)
+            regressor = KerasRegressor(build_fn=lstm_model, epochs=1000, batch_size=5, verbose=False)
             # pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
             pipeline = Pipeline([('regressor', regressor)])
 
@@ -247,16 +191,6 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
                                                                 greater_is_better=False),
                   'root_mean_squared_error': make_scorer(root_mean_squared_error, greater_is_better=False)}
 
-       # if reg_type == 'LSTM':
-            # reshape from [samples, timesteps] into [samples, timesteps, features]
-            #n_features = 1
-            #X = X.reshape((X.shape[0], X.shape[1], n_features))
-
-        print(X.shape)
-        print(Y.shape)
-        # if reg_type == 'LSTM':
-        #     scores = score_lstm(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv)
-        # else:
         scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False)
 
         # Fill results dict object
@@ -265,10 +199,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             scores[key] = value.tolist()
         results[project][versions_ahead][reg_type] = scores
 
-    #     regressor.fit(X_train, Y_train)
-    #     results[project][versions_ahead][reg_type]['test_set_r2'] = regressor.score(X_test, Y_test)
-
-    # For every project in dataset
+   # For every project in dataset
     for project in DATASET:
         # Initialize results dict object
         results[project] = {}
@@ -287,23 +218,17 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
 
             # Adding time-shifted prior and future period
             data = series_to_supervised(dataset.values, n_in=WINDOW_SIZE)
-           # print(data.head(5))
             # Append dependend variable column with value equal to next version's total_principal
             data['forecasted_total_principal'] = data['var4(t)'].shift(-versions_ahead)
-           # print("depois do append")
-           # print(data.head(5))
             data = data.drop(data.index[-versions_ahead:])
-           # print("depois do drop")
-           # print(data.head(5))
-
             # Remove total_cost from indpependent variables set
             #drop pra nao alienar o algoritmo (creio eu)
             data = data.drop(columns=['var4(t-2)', 'var4(t-1)', 'var4(t)'])
-          #  print(data.head(5))
+
+            #### ADAPTACAO MELO ESTRUTURA RECORRENTE ####
 
             #para transformar na representação do melo é preciso splitar as linhas 
-            # em colunas baseado no tamanho da janela eno número de variaveis
-            #print(data.shape[0])
+            # em colunas baseado no tamanho da janela e no número de variaveis
             timeseries_list = list()
             timeseries_labels = list()
             for i in range(0,data.shape[0]):
@@ -319,19 +244,18 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             
             timeseries_labels = np.array(timeseries_labels).astype(np.float64)
             timeseries_labels = timeseries_labels.reshape(-1, 1)
+
+            #### FIM ADAPTACAO MELO ESTRUTURA RECORRENTE ####
             
             # Set X, Y
             X = data.iloc[:, data.columns != 'forecasted_total_principal'].values
             # Y = data.iloc[:, data.columns == 'forecasted_total_principal'].values
             Y = data.forecasted_total_principal.values
-            # for i in range(len(X)):
-            #    print(X[i], Y[i])
-
-            
-
-            #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
-            for reg_type in ['LSTM']:
-                regressor = create_regressor(reg_type, timeseries_tensor, timeseries_labels, project, versions_ahead)
+            for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
+                if(reg_type == 'LSTM'):
+                    regressor = create_regressor(reg_type, timeseries_tensor, timeseries_labels, project, versions_ahead)
+                else:
+                    regressor = create_regressor(reg_type, X, Y, project, versions_ahead)
 
     print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET)
 
@@ -367,10 +291,7 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
         print('**************** %s ****************' % project)
         print(results[project][versions_ahead][reg_type])
 
-       # 'RandomForestRegressor','LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf',
-       #                  'SVR_linear',
-
-        for reg_type in ['LSTM']:
+        for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
             print('================ %s ================' % reg_type)
             for versions_ahead in VERSIONS_AHEAD:
                 # Print scores
@@ -390,124 +311,8 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
 
                 print('%0.3f;%0.3f;%0.3f;%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
 
-def make_GRU(input_shape, output_dim, dropout=0.3):
-        #print("model dim: ", input_shape, output_dim)
-        model = Sequential()
-        model.add(GRU(256, input_shape=input_shape, return_sequences=True))
-        model.add(Dropout(dropout))
-        model.add(GRU(128, return_sequences=True))
-        model.add(Dropout(dropout))
-        model.add(GRU(64))
-        model.add(Dropout(dropout))
-        model.add(Dense(output_dim, activation='softmax'))
-        #model.summary()
-        return model
-def evaluation_metrics(self,y_test, y_pred, weights_t):
-       # print("ROC_AUC: " + str(roc_auc_score(y_test, y_pred, sample_weight=weights_t)))
-        print("F1-Score: " + str(f1_score(y_test, y_pred, sample_weight=weights_t)))
-        print("Precision: " + str(precision_score(y_test, y_pred, sample_weight=weights_t)))
-        print("Recall: " + str(recall_score(y_test, y_pred, sample_weight=weights_t)))
-        print("Accuracy: " + str(accuracy_score(y_test, y_pred, sample_weight=weights_t)))
-def f1(y_true, y_pred):
-            def recall(y_true, y_pred):
-                """Recall metric.
 
-                Only computes a batch-wise average of recall.
 
-                Computes the recall, a metric for multi-label classification of
-                how many relevant items are selected.
-                """
-                true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-                possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-                recall = true_positives / (possible_positives + K.epsilon())
-                return recall
-
-            def precision(y_true, y_pred):
-                """Precision metric.
-
-                Only computes a batch-wise average of precision.
-
-                Computes the precision, a metric for multi-label classification of
-                how many selected items are relevant.
-                """
-                true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-                predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
-                precision = true_positives / (predicted_positives + K.epsilon())
-                return precision
-            precision = precision(y_true, y_pred)
-            recall = recall(y_true, y_pred)
-            return 2*((precision*recall)/(precision+recall+K.epsilon()))
-
-def auc(y_true, y_pred):
-    return tf.py_function(roc_auc_score, (y_true, y_pred), tf.double)
-
-def funRemovida():
-    print("tensor input X:", timeseries_tensor.shape)
-    print("Timeserie labe y:", timeseries_labels.shape)
-    print("Splitting dataset into Train and Test sets...")
-    X_train, X_test, y_train, y_test = train_test_split(timeseries_tensor, timeseries_labels, test_size=0.30, random_state=42)
-    X_train = X_train.transpose((0,2,1))
-    X_test = X_test.transpose((0,2,1))
-    print("Tensor X train:", X_train.shape)
-    print("Tensor y train:", y_train.shape)
-    print("Tensor X test:", X_test.shape)
-    print("Tensor y test:", y_test.shape)
-
-    print("computing weights...")
-    
-    fractions = 1-y_train.sum(axis=0)/len(y_train)
-    weights = fractions[y_train.argmax(axis=1)]
-    print("... DONE!")
-
-    print("setting stratified k-fold...")
-    k=2
-    print("number of k:",k)
-    skf = StratifiedKFold(n_splits=k, shuffle=True,  random_state=1337)
-    print("... DONE!")
-    
-    print("Executing algorithm...")
-    lastModels = {}
-    history_general = {}
-    val_history_general = {}
-    
-    set_number_of_epochs=20
-    set_batch_size=512
-    print("number of epochs:", set_number_of_epochs)
-    print("number of batch:", set_batch_size)
-    
-    start = time.time()
-    #for index, (train_indices, val_indices) in enumerate(skf.split(X_train, y_train)):
-    """  print ("Training on fold " + str(index + 1) + "/"+str(k)+"...") 
-        xtrain, xval = X_train[train_indices], X_train[val_indices]
-        ytrain, yval = y_train[train_indices], y_train[val_indices] 
-        weights_train = weights[train_indices]
-        weights_val = weights[val_indices]
-
-        #model = None
-        model = make_GRU((xtrain.shape[1], xtrain.shape[2]), 2)
-        print("compilando")
-        #model.compile(loss='mse', optimizer='adam', metrics=['acc', f1])
-        model.compile(loss='mse', optimizer='adam', metrics=['acc'])
-        print("fit..")
-        history = model.fit(xtrain, ytrain, validation_data=(xval, yval, weights_val), epochs=set_number_of_epochs, batch_size=set_batch_size, sample_weight=weights_train, verbose=False)
-
-        print("preditct")
-        output = model.predict_classes(xval)
-
-        print(confusion_matrix(yval.argmax(axis=1), output))
-
-        print(classification_report(yval.argmax(axis=1), output))
-
-        end = time.time()
-        time_in_seconds =  end - start
-        print("time (in seconds)", time_in_seconds)
-        
-        lastModel = model
-        history_general = history.history
-        
-        print("... DONE!")
-    """
-    
 if __name__ == '__main__':
     # Selecting indicators that will be used as model variables
 
