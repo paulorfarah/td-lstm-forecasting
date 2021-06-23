@@ -292,7 +292,7 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
         print(results[project][versions_ahead][reg_type])
 
         for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
-            print('================ %s ================' % reg_type)
+            print('*************** %s **************' % reg_type)
             for versions_ahead in VERSIONS_AHEAD:
                 # Print scores
                 mae_mean = np.asarray(results[project][versions_ahead][reg_type]['test_neg_mean_absolute_error']).mean()
@@ -309,7 +309,7 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
                 rmse_std = np.asarray(results[project][versions_ahead][reg_type]['test_root_mean_squared_error']).std()
                 # test_set_r2 = results[project][versions_ahead][reg_type]['test_set_r2']
 
-                print('%0.3f;%0.3f;%0.3f;%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
+                print('%0.3f,%0.3f,%0.3f,%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
 
 
 
@@ -319,24 +319,24 @@ if __name__ == '__main__':
     # 'AMC', 'WMC', 'DIT', 'NOC', 'RFC', 'CBO', 'Ca', 'Ce', 'CBM', 'IC', 'LCOM', 'LCOM3', 'CAM', 'NPM', 'DAM', 'MOA']
     # 'Security Index', 'blocker_violations', 'critical_violations', 'major_violations', 'minor_violations', 'info_violations']
     DATASET = ['_benchmark_repository_measures',
-  #              'apache_groovy_measures',
-   #             'apache_incubator_dubbo_measures',
-   #             'apache_kafka_measures',
-    #            'apache_nifi_measures',
-     #           'apache_ofbiz_measures',
-      #          'apache_systemml_measures',
-       #         'commonsio_measures',
-        #        'company_projectA_measures',
-         #       'company_projectB_measures',
-          #      'google_guava_measures',
-           #     'igniterealtime_openfire_measures',
-            #    'java_websocket_measures',
-             #   'jenkinsci_jenkins_measures',
-              #  'spring-projects_spring-boot_measures',
-               # 'square_okhttp_measures',
-                #'square_retrofit_measures',
-                #'zxing_zxing_measures']
-                ]
+                'apache_groovy_measures',
+                'apache_incubator_dubbo_measures',
+                'apache_kafka_measures',
+                'apache_nifi_measures',
+                'apache_ofbiz_measures',
+                'apache_systemml_measures',
+                'commonsio_measures',
+                'company_projectA_measures',
+                'company_projectB_measures',
+                'google_guava_measures',
+                'igniterealtime_openfire_measures',
+                'java_websocket_measures',
+                'jenkinsci_jenkins_measures',
+                'spring-projects_spring-boot_measures',
+                'square_okhttp_measures',
+                'square_retrofit_measures',
+                'zxing_zxing_measures']
+                
 
     WINDOW_SIZE = 2  # choose based on error minimization for different forecasting horizons
     VERSIONS_AHEAD = [2, 5, 10, 20, 40]
