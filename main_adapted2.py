@@ -115,9 +115,9 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             # In keras you need to pass (timesteps, input_dim) for input_shape argument.
 
             model = Sequential()
-            model.add(LSTM(200, input_shape=(3, 3),return_sequences=True, kernel_initializer='normal', activation='relu'))
-            model.add(LSTM(100,activation='relu', return_sequences=True, input_shape=(3, 3)))
-            model.add(LSTM(50,activation='relu', return_sequences=False, input_shape=(3, 3)))
+            model.add(LSTM(150, input_shape=(3, 3),return_sequences=True, kernel_initializer='normal', activation='relu'))
+            model.add(LSTM(50,activation='relu', return_sequences=True, input_shape=(3, 3)))
+            model.add(LSTM(10,activation='relu', return_sequences=False, input_shape=(3, 3)))
             model.add(Dense(1, kernel_initializer='normal'))
             model.compile(loss='mean_squared_error', optimizer='adam')
             return model
@@ -316,24 +316,24 @@ if __name__ == '__main__':
 
     # 'AMC', 'WMC', 'DIT', 'NOC', 'RFC', 'CBO', 'Ca', 'Ce', 'CBM', 'IC', 'LCOM', 'LCOM3', 'CAM', 'NPM', 'DAM', 'MOA']
     # 'Security Index', 'blocker_violations', 'critical_violations', 'major_violations', 'minor_violations', 'info_violations']
-    DATASET = ['_benchmark_repository_measures',
-                'apache_groovy_measures',
-                'apache_incubator_dubbo_measures',
+    DATASET = [#'_benchmark_repository_measures',
+                #'apache_groovy_measures',
+                #'apache_incubator_dubbo_measures',
                 'apache_kafka_measures',
-                'apache_nifi_measures',
-                'apache_ofbiz_measures',
-                'apache_systemml_measures',
-                'commonsio_measures',
-                'company_projectA_measures',
-                'company_projectB_measures',
-                'google_guava_measures',
-                'igniterealtime_openfire_measures',
-                'java_websocket_measures',
-                'jenkinsci_jenkins_measures',
-                'spring-projects_spring-boot_measures',
-                'square_okhttp_measures',
-                'square_retrofit_measures',
-                'zxing_zxing_measures'
+                #'apache_nifi_measures',
+                #'apache_ofbiz_measures',
+                #'apache_systemml_measures',
+                #'commonsio_measures',
+                #'company_projectA_measures',
+                #'company_projectB_measures',
+                #'google_guava_measures',
+                #'igniterealtime_openfire_measures',
+                #'java_websocket_measures',
+                #'jenkinsci_jenkins_measures',
+                #'spring-projects_spring-boot_measures',
+                #'square_okhttp_measures',
+                #'square_retrofit_measures',
+                #'zxing_zxing_measures'
                  ]
                 
 
