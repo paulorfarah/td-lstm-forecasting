@@ -119,9 +119,9 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             #model.compile(loss='mean_squared_error', optimizer='adam')
             #return model
             model = Sequential()
-            model.add(LSTM(150, input_shape=(3, 3),return_sequences=True, kernel_initializer='normal', activation='relu'))
-            model.add(LSTM(50,activation='relu', return_sequences=True, input_shape=(3, 3)))
-            model.add(LSTM(10,activation='relu', return_sequences=False, input_shape=(3, 3)))
+            model.add(LSTM(150, input_shape=(10, 1),return_sequences=True, kernel_initializer='normal', activation='relu'))
+            model.add(LSTM(50,activation='relu', return_sequences=True, input_shape=(10, 1)))
+            model.add(LSTM(10,activation='relu', return_sequences=False, input_shape=(10, 1)))
             model.add(Dense(1, kernel_initializer='normal'))
             model.compile(loss='mean_squared_error', optimizer='adam')
             return model
