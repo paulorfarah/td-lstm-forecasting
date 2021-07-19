@@ -212,11 +212,12 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
 
         #scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False)
         search = GridSearchCV(estimator=pipeline, param_grid=param_grid, n_jobs=-1, scoring=scorer, refit=False, return_train_score=False)
+        print("fiting....")
         search.fit(X=X, y=Y.ravel())
 
         print("Best parameter (CV score=%0.3f):")
-        print(search.best_params_)
-        search.scorer_.items
+        #print(search.best_params_)
+        #search.scorer_.items
         for key, value in  search.scorer_.items():
            # print(key, value)
             scores[key] = value.tolist()
