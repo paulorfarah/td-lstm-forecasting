@@ -211,17 +211,17 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             X = X.reshape((X.shape[0], X.shape[1], n_features))
 
         #scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False)
-        search = GridSearchCV(estimator=pipeline, param_grid=param_grid, n_jobs=-1, scoring=scorer, refit=False, return_train_score=False)
+        search = GridSearchCV(estimator=pipeline, param_grid=param_grid, n_jobs=-1,refit='mean_absolute_percentage_error' , cv=tscv, scoring=scorer, return_train_score=False)
         print("fiting....")
         search.fit(X=X, y=Y.ravel())
 
         print("Best parameter (CV score=%0.3f):")
-        #print(search.best_params_)
+        print(search.best_params_)
         #search.scorer_.items
-        for key, value in  search.scorer_.items():
-           # print(key, value)
-            scores[key] = value.tolist()
-        results[project][versions_ahead][reg_type] = search.scorer_
+       # for key, value in  search.scorer_.items():
+       #     print(key, value)
+       #     scores[key] = value.tolist()
+        results[project][versions_ahead][reg_type] = search.best_score_
 
    # For every project in dataset
     for project in DATASET:
