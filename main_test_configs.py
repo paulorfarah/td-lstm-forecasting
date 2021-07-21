@@ -221,9 +221,10 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
        # for key, value in  search.scorer_.items():
        #     print(key, value)
        #     scores[key] = value.tolist()
-        for key, value in search.cv_results_:
-            print(key, value)
-            search[key] = value.tolist()
+        for key in search.cv_results_.keys():
+            print(key)
+            search[key] = search.cv_results_[key]
+            print(search[key])
         
         results[project][versions_ahead][reg_type] = search
 
