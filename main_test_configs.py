@@ -105,18 +105,19 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         #custom parameters for lstm
         batch_size = [2,5,10, 15, 20, 25, 30]
         epochs = [100,500,1000,1500]
-        optimizer = ['adam']
+        optimizer = ['adam','Adadelta']
         learn_rate = [0.001, 0.01, 0.1, 0.2, 0.3]
         momentum = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9]
         init_mode = ['uniform', 'lecun_uniform', 'normal', 'zero', 'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform']
         activation = ['softmax', 'softplus', 'softsign', 'relu', 'tanh', 'sigmoid', 'hard_sigmoid', 'linear']
         weight_constraint = [1, 2, 3, 4, 5]
         dropout_rate = [0.0,0.05, 0.1, 0.2, 0.3]
-        neurons = [10, 50, 100, 150, 200, 250, 300]
+        neurons = [10, 50]
 
         #param_grid = dict(optimizer = optimizer)
         param_grid = {
                         'regressor__optimizer': optimizer,
+                        'regressor__neurons': neurons
                      }
 
         # define base model
@@ -129,12 +130,12 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             model.compile(loss='mean_squared_error', optimizer='adam')
             return model
 
-        def lstm_model(optimizer='adam'):
+        def lstm_model(optimizer='adam', neurons = 10):
             # LSTM layer expects inputs to have shape of (batch_size, timesteps, input_dim).
             # In keras you need to pass (timesteps, input_dim) for input_shape argument.
 
             model = Sequential()
-            model.add(LSTM(200, input_shape=(9, 1), kernel_initializer='normal', activation='relu'))
+            model.add(LSTM(neurons, input_shape=(9, 1), kernel_initializer='normal', activation='relu'))
             model.add(Dense(1, kernel_initializer='normal'))
             model.compile(loss='mean_squared_error', optimizer=optimizer)
             return model
@@ -224,8 +225,8 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         results[project][versions_ahead][reg_type] = {}
         print("############## ######## #####")
         for key in search.cv_results_.keys():
-            print(key)
-            print(search.cv_results_[key])
+            #print(key)
+            #print(search.cv_results_[key])
             results[project][versions_ahead][reg_type][key] = {}
             results[project][versions_ahead][reg_type][key] = search.cv_results_[key]
            #results[project][versions_ahead][reg_type][key] = search.cv_results_[key]
