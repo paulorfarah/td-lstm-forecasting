@@ -223,12 +223,13 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
        #     scores[key] = value.tolist()
         print("############## ######## #####")
         for key in search.cv_results_.keys():
-            print(key)
-            print(search.cv_results_[key])
+           # print(key)
+           # print(search.cv_results_[key])
+            results[project][versions_ahead][reg_type][key] = search.cv_results_[key]
             #search[key] = search.cv_results_[key]
             #print(search[key])
         
-        results[project][versions_ahead][reg_type] = search
+        #results[project][versions_ahead][reg_type] = search
 
    # For every project in dataset
     for project in DATASET:
@@ -328,18 +329,16 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
             print('*************** %s **************' % reg_type)
             for versions_ahead in VERSIONS_AHEAD:
                 # Print scores
-                mae_mean = np.asarray(results[project][versions_ahead][reg_type]['test_neg_mean_absolute_error']).mean()
-                mae_std = np.asarray(results[project][versions_ahead][reg_type]['test_neg_mean_absolute_error']).std()
-                mse_mean = np.asarray(results[project][versions_ahead][reg_type]['test_neg_mean_squared_error']).mean()
-                mse_std = np.asarray(results[project][versions_ahead][reg_type]['test_neg_mean_squared_error']).std()
-                mape_mean = np.asarray(
-                    results[project][versions_ahead][reg_type]['test_mean_absolute_percentage_error']).mean()
-                mape_std = np.asarray(
-                    results[project][versions_ahead][reg_type]['test_mean_absolute_percentage_error']).std()
-                r2_mean = np.asarray(results[project][versions_ahead][reg_type]['test_r2']).mean()
-                r2_std = np.asarray(results[project][versions_ahead][reg_type]['test_r2']).std()
-                rmse_mean = np.asarray(results[project][versions_ahead][reg_type]['test_root_mean_squared_error']).mean()
-                rmse_std = np.asarray(results[project][versions_ahead][reg_type]['test_root_mean_squared_error']).std()
+                mae_mean = results[project][versions_ahead][reg_type]['mean_test_neg_mean_absolute_error']
+                mae_std = results[project][versions_ahead][reg_type]['std_test_neg_mean_absolute_error']
+                mse_mean = results[project][versions_ahead][reg_type]['mean_test_neg_mean_squared_error']
+                mse_std = results[project][versions_ahead][reg_type]['std_test_neg_mean_squared_error']
+                mape_mean = results[project][versions_ahead][reg_type]['mean_test_mean_absolute_percentage_error']
+                mape_std = results[project][versions_ahead][reg_type]['std_test_mean_absolute_percentage_error']
+                r2_mean = results[project][versions_ahead][reg_type]['mean_test_r2']
+                r2_std = results[project][versions_ahead][reg_type]['std_test_r2']
+                rmse_mean = results[project][versions_ahead][reg_type]['mean_test_root_mean_squared_error']
+                rmse_std = results[project][versions_ahead][reg_type]['std_test_root_mean_squared_error']
                 # test_set_r2 = results[project][versions_ahead][reg_type]['test_set_r2']
 
                 print('%0.3f,%0.3f,%0.3f,%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
