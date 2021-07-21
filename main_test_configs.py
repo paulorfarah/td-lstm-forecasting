@@ -223,12 +223,21 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
        #     scores[key] = value.tolist()
         print("############## ######## #####")
         for key in search.cv_results_.keys():
-           # print(key)
-           # print(search.cv_results_[key])
-            results[project][versions_ahead][reg_type][key] = search.cv_results_[key]
+            print(key)
+            print(search.cv_results_[key])
+           #results[project][versions_ahead][reg_type][key] = search.cv_results_[key]
             #search[key] = search.cv_results_[key]
             #print(search[key])
-        
+        results[project][versions_ahead][reg_type]['mean_test_neg_mean_absolute_error'] =  search.cv_results_['mean_test_neg_mean_absolute_error']
+        results[project][versions_ahead][reg_type]['std_test_neg_mean_absolute_error'] =  search.cv_results_['std_test_neg_mean_absolute_error']
+        results[project][versions_ahead][reg_type]['mean_test_neg_mean_squared_error'] =  search.cv_results_['mean_test_neg_mean_squared_error']
+        results[project][versions_ahead][reg_type]['std_test_neg_mean_squared_error'] =  search.cv_results_['std_test_neg_mean_squared_error']
+        results[project][versions_ahead][reg_type]['mean_test_mean_absolute_percentage_error'] =  search.cv_results_['mean_test_mean_absolute_percentage_error']
+        results[project][versions_ahead][reg_type]['std_test_mean_absolute_percentage_error'] =  search.cv_results_['std_test_mean_absolute_percentage_error']
+        results[project][versions_ahead][reg_type]['mean_test_r2'] =  search.cv_results_['mean_test_r2']
+        results[project][versions_ahead][reg_type]['std_test_r2'] =  search.cv_results_['std_test_r2']
+        results[project][versions_ahead][reg_type]['mean_test_root_mean_squared_error'] =  search.cv_results_['mean_test_root_mean_squared_error']
+        results[project][versions_ahead][reg_type]['std_test_root_mean_squared_error'] =  search.cv_results_['std_test_root_mean_squared_error']
         #results[project][versions_ahead][reg_type] = search
 
    # For every project in dataset
