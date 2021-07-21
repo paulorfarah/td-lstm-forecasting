@@ -216,15 +216,17 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         search.fit(X=X, y=Y.ravel())
 
         print("Best parameter (CV score=%0.3f):")
-        print(search)
+        #print(search)
         #search.scorer_.items
        # for key, value in  search.scorer_.items():
        #     print(key, value)
        #     scores[key] = value.tolist()
+        print("############## ######## #####")
         for key in search.cv_results_.keys():
             print(key)
-            search[key] = search.cv_results_[key]
-            print(search[key])
+            print(search.cv_results_[key])
+            #search[key] = search.cv_results_[key]
+            #print(search[key])
         
         results[project][versions_ahead][reg_type] = search
 
