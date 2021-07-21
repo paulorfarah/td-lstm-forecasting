@@ -216,12 +216,16 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         search.fit(X=X, y=Y.ravel())
 
         print("Best parameter (CV score=%0.3f):")
-        print(search.best_params_)
+        print(search)
         #search.scorer_.items
        # for key, value in  search.scorer_.items():
        #     print(key, value)
        #     scores[key] = value.tolist()
-        results[project][versions_ahead][reg_type] = search.best_score_
+        for key, value in search.cv_results_:
+            print(key, value)
+            search[key] = value.tolist()
+        
+        results[project][versions_ahead][reg_type] = search
 
    # For every project in dataset
     for project in DATASET:
@@ -366,7 +370,8 @@ if __name__ == '__main__':
                 
 
     WINDOW_SIZE = 2  # choose based on error minimization for different forecasting horizons
-    VERSIONS_AHEAD = [2, 5, 10, 20, 40]
+    #VERSIONS_AHEAD = [2, 5, 10, 20, 40]
+    VERSIONS_AHEAD = [2]
 
     main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD)
 
