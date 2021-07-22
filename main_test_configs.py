@@ -225,8 +225,8 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         results[project][versions_ahead][reg_type] = {}
         print("############## ######## #####")
         for key in search.cv_results_.keys():
-            #print(key)
-            #print(search.cv_results_[key])
+            print(key)
+            print(search.cv_results_[key])
             results[project][versions_ahead][reg_type][key] = {}
             results[project][versions_ahead][reg_type][key] = search.cv_results_[key]
            #results[project][versions_ahead][reg_type][key] = search.cv_results_[key]
