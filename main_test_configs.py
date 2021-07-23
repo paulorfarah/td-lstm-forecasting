@@ -372,7 +372,7 @@ if __name__ == '__main__':
     DATASET = ['_benchmark_repository_measures',
                # 'apache_groovy_measures',
                # 'apache_incubator_dubbo_measures',
-               # 'apache_kafka_measures',
+                'apache_kafka_measures'
                # 'apache_nifi_measures',
                # 'apache_ofbiz_measures',
                # 'apache_systemml_measures',
