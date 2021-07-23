@@ -103,8 +103,8 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         from sklearn.preprocessing import StandardScaler
         scaler = StandardScaler()
         #custom parameters for lstm
-        batch_size = [2,5,10, 15, 20, 25, 30]
-        epochs = [100,500,1000,1500]
+        batch_size = [5,10, 15]
+        epochs = [500,1000,1500]
         optimizer = ['adam','Adadelta']
         learn_rate = [0.001, 0.01, 0.1, 0.2, 0.3]
         momentum = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9]
@@ -112,12 +112,14 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         activation = ['softmax', 'softplus', 'softsign', 'relu', 'tanh', 'sigmoid', 'hard_sigmoid', 'linear']
         weight_constraint = [1, 2, 3, 4, 5]
         dropout_rate = [0.0,0.05, 0.1, 0.2, 0.3]
-        neurons = [10, 50]
+        neurons = [100,150,250]
 
         #param_grid = dict(optimizer = optimizer)
         param_grid = {
                         'regressor__optimizer': optimizer,
-                        'regressor__neurons': neurons
+                        'regressor__neurons': neurons,
+                        'regressor__batch_size': batch_size,
+                        'regressor__epochs': epochs
                      }
 
         # define base model
@@ -130,7 +132,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             model.compile(loss='mean_squared_error', optimizer='adam')
             return model
 
-        def lstm_model(optimizer='adam', neurons = 10):
+        def lstm_model(optimizer='adam', neurons = 100):
             # LSTM layer expects inputs to have shape of (batch_size, timesteps, input_dim).
             # In keras you need to pass (timesteps, input_dim) for input_shape argument.
 
@@ -389,8 +391,8 @@ if __name__ == '__main__':
                 
 
     WINDOW_SIZE = 2  # choose based on error minimization for different forecasting horizons
-    #VERSIONS_AHEAD = [2, 5, 10, 20, 40]
-    VERSIONS_AHEAD = [2,5]
+    VERSIONS_AHEAD = [2, 5, 10, 20, 40]
+    #VERSIONS_AHEAD = [2,5]
 
     main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD)
 
