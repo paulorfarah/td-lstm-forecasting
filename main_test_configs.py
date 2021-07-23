@@ -353,7 +353,7 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
                 rmse_mean = results[project][versions_ahead][reg_type]['mean_test_root_mean_squared_error']
                 rmse_std = results[project][versions_ahead][reg_type]['std_test_root_mean_squared_error']
                 # test_set_r2 = results[project][versions_ahead][reg_type]['test_set_r2']
-                print("version ahead " + versions_ahead)
+                print("version ahead ", str(versions_ahead))
                 print ("mae_mean ", mae_mean)
                 print ("rmse_mean ", rmse_mean)
                 print("mape_mean ", mape_mean)
