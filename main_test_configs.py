@@ -353,8 +353,12 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
                 rmse_mean = results[project][versions_ahead][reg_type]['mean_test_root_mean_squared_error']
                 rmse_std = results[project][versions_ahead][reg_type]['std_test_root_mean_squared_error']
                 # test_set_r2 = results[project][versions_ahead][reg_type]['test_set_r2']
-
-                print('%0.3f,%0.3f,%0.3f,%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
+                print("version ahead " + versions_ahead)
+                print ("mae_mean ", mae_mean)
+                print ("rmse_mean ", rmse_mean)
+                print("mape_mean ", mape_mean)
+                print("r2_mean ", r2_mean)
+                #print('%0.3f,%0.3f,%0.3f,%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
 
 
 
@@ -386,7 +390,7 @@ if __name__ == '__main__':
 
     WINDOW_SIZE = 2  # choose based on error minimization for different forecasting horizons
     #VERSIONS_AHEAD = [2, 5, 10, 20, 40]
-    VERSIONS_AHEAD = [2]
+    VERSIONS_AHEAD = [2,5]
 
     main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD)
 
