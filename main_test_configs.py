@@ -218,34 +218,20 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         print("fiting....")
         search.fit(X=X, y=Y.ravel())
 
-        print("Best parameter (CV score=%0.3f):")
+       # print("Best parameter (CV score=%0.3f):")
         #print(search)
         #search.scorer_.items
        # for key, value in  search.scorer_.items():
        #     print(key, value)
        #     scores[key] = value.tolist()
         results[project][versions_ahead][reg_type] = {}
-        print("############## ######## #####")
+        #print("############## ######## #####")
         for key in search.cv_results_.keys():
-            print(key)
-            print(search.cv_results_[key])
+            #print(key)
+            #print(search.cv_results_[key])
             results[project][versions_ahead][reg_type][key] = {}
             results[project][versions_ahead][reg_type][key] = search.cv_results_[key]
-           #results[project][versions_ahead][reg_type][key] = search.cv_results_[key]
-            #search[key] = search.cv_results_[key]
-            #print(search[key])
-        #results[project][versions_ahead][reg_type]['mean_test_neg_mean_absolute_error'] =  search.cv_results_['mean_test_neg_mean_absolute_error']
-        #results[project][versions_ahead][reg_type]['std_test_neg_mean_absolute_error'] =  search.cv_results_['std_test_neg_mean_absolute_error']
-        #results[project][versions_ahead][reg_type]['mean_test_neg_mean_squared_error'] =  search.cv_results_['mean_test_neg_mean_squared_error']
-        #results[project][versions_ahead][reg_type]['std_test_neg_mean_squared_error'] =  search.cv_results_['std_test_neg_mean_squared_error']
-        #results[project][versions_ahead][reg_type]['mean_test_mean_absolute_percentage_error'] =  search.cv_results_['mean_test_mean_absolute_percentage_error']
-        #results[project][versions_ahead][reg_type]['std_test_mean_absolute_percentage_error'] =  search.cv_results_['std_test_mean_absolute_percentage_error']
-        #results[project][versions_ahead][reg_type]['mean_test_r2'] =  search.cv_results_['mean_test_r2']
-        #results[project][versions_ahead][reg_type]['std_test_r2'] =  search.cv_results_['std_test_r2']
-        #results[project][versions_ahead][reg_type]['mean_test_root_mean_squared_error'] =  search.cv_results_['mean_test_root_mean_squared_error']
-        #results[project][versions_ahead][reg_type]['std_test_root_mean_squared_error'] =  search.cv_results_['std_test_root_mean_squared_error']
-        #results[project][versions_ahead][reg_type] = search
-
+  
    # For every project in dataset
     for project in DATASET:
         # Initialize results dict object
@@ -345,21 +331,27 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
             for versions_ahead in VERSIONS_AHEAD:
                 # Print scores
                 mae_mean = results[project][versions_ahead][reg_type]['mean_test_neg_mean_absolute_error']
-                mae_std = results[project][versions_ahead][reg_type]['std_test_neg_mean_absolute_error']
-                mse_mean = results[project][versions_ahead][reg_type]['mean_test_neg_mean_squared_error']
-                mse_std = results[project][versions_ahead][reg_type]['std_test_neg_mean_squared_error']
+                #mae_std = results[project][versions_ahead][reg_type]['std_test_neg_mean_absolute_error']
+                #mse_mean = results[project][versions_ahead][reg_type]['mean_test_neg_mean_squared_error']
+                #mse_std = results[project][versions_ahead][reg_type]['std_test_neg_mean_squared_error']
                 mape_mean = results[project][versions_ahead][reg_type]['mean_test_mean_absolute_percentage_error']
-                mape_std = results[project][versions_ahead][reg_type]['std_test_mean_absolute_percentage_error']
+                #mape_std = results[project][versions_ahead][reg_type]['std_test_mean_absolute_percentage_error']
                 r2_mean = results[project][versions_ahead][reg_type]['mean_test_r2']
-                r2_std = results[project][versions_ahead][reg_type]['std_test_r2']
+                #r2_std = results[project][versions_ahead][reg_type]['std_test_r2']
                 rmse_mean = results[project][versions_ahead][reg_type]['mean_test_root_mean_squared_error']
-                rmse_std = results[project][versions_ahead][reg_type]['std_test_root_mean_squared_error']
+                #rmse_std = results[project][versions_ahead][reg_type]['std_test_root_mean_squared_error']
+                params =  results[project][versions_ahead][reg_type]['params']
                 # test_set_r2 = results[project][versions_ahead][reg_type]['test_set_r2']
                 print("version ahead ", str(versions_ahead))
                 print ("mae_mean ", mae_mean)
                 print ("rmse_mean ", rmse_mean)
                 print("mape_mean ", mape_mean)
                 print("r2_mean ", r2_mean)
+                print("******* TOP PARAMS VERSIONS AHEAD ", str(versions_ahead))
+                print ("mae_mean ", abs(max(mae_mean))," params ",params[mae_mean.index(max(mae_mean))])
+                print ("rmse_mean ", abs(max(rmse_mean))," params ",params[rmse_mean.index(max(rmse_mean))])
+                print("mape_mean ", abs(max(mape_mean))," params ",params[mape_mean.index(max(mape_mean))])
+                print("r2_mean ", max(mape_mean)," params ",params[mape_mean.index(max(mape_mean))])
                 #print('%0.3f,%0.3f,%0.3f,%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
 
 
@@ -372,7 +364,7 @@ if __name__ == '__main__':
     DATASET = ['_benchmark_repository_measures',
                # 'apache_groovy_measures',
                # 'apache_incubator_dubbo_measures',
-                'apache_kafka_measures'
+               # 'apache_kafka_measures'
                # 'apache_nifi_measures',
                # 'apache_ofbiz_measures',
                # 'apache_systemml_measures',
@@ -391,8 +383,8 @@ if __name__ == '__main__':
                 
 
     WINDOW_SIZE = 2  # choose based on error minimization for different forecasting horizons
-    VERSIONS_AHEAD = [2, 5, 10, 20, 40]
-    #VERSIONS_AHEAD = [2,5]
+   # VERSIONS_AHEAD = [2, 5, 10, 20, 40]
+    VERSIONS_AHEAD = [2,5]
 
     main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD)
 
