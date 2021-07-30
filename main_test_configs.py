@@ -347,11 +347,16 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
                 print ("rmse_mean ", rmse_mean)
                 print("mape_mean ", mape_mean)
                 print("r2_mean ", r2_mean)
+                mae_mean2 = mae_mean.tolist()
+                rmse_mean2 = rmse_mean.tolist()
+                mape_mean2 = mape_mean.tolist()
+                r2_mean2 = r2_mean.tolist()
+
                 print("******* TOP PARAMS VERSIONS AHEAD ", str(versions_ahead))
-                print ("mae_mean ", abs(max(mae_mean))," params ",params[mae_mean.index(max(mae_mean))])
-                print ("rmse_mean ", abs(max(rmse_mean))," params ",params[rmse_mean.index(max(rmse_mean))])
-                print("mape_mean ", abs(max(mape_mean))," params ",params[mape_mean.index(max(mape_mean))])
-                print("r2_mean ", max(mape_mean)," params ",params[mape_mean.index(max(mape_mean))])
+                print ("mae_mean ", abs(max(mae_mean2))," params ",params[mae_mean2.index(max(mae_mean2))])
+                print ("rmse_mean ", abs(max(rmse_mean2))," params ",params[rmse_mean2.index(max(rmse_mean2))])
+                print("mape_mean ", abs(max(mape_mean2))," params ",params[mape_mean2.index(max(mape_mean2))])
+                print("r2_mean ", max(r2_mean2)," params ",params[r2_mean2.index(max(r2_mean2))])
                 #print('%0.3f,%0.3f,%0.3f,%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
 
 
