@@ -13,6 +13,10 @@ from keras.layers.recurrent import LSTM, GRU
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import GridSearchCV
+from pandas import read_csv
+from pandas import datetime
+
+
 
 import time
 import tensorflow as tf
@@ -103,28 +107,23 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         from sklearn.preprocessing import StandardScaler
         scaler = StandardScaler()
         #custom parameters for lstm
-        batch_size = [5,10]
+        batch_size = [5,10, 15]
         epochs = [500,1000,1500]
-        optimizer = ['adam']
+        optimizer = ['adam','Adadelta']
         learn_rate = [0.001, 0.01, 0.1, 0.2, 0.3]
         momentum = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9]
         init_mode = ['uniform', 'lecun_uniform', 'normal', 'zero', 'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform']
-        #activation = ['softmax', 'softplus', 'softsign', 'relu', 'tanh', 'sigmoid', 'hard_sigmoid', 'linear']
-        activation = ['relu', 'tanh']
+        activation = ['softmax', 'softplus', 'softsign', 'relu', 'tanh', 'sigmoid', 'hard_sigmoid', 'linear']
         weight_constraint = [1, 2, 3, 4, 5]
-        dropout_rate = [0.2]
-        neurons = [50,100,150,200]
-        layers = [1,2]
+        dropout_rate = [0.0,0.05, 0.1, 0.2, 0.3]
+        neurons = [100,150,250]
 
         #param_grid = dict(optimizer = optimizer)
         param_grid = {
                         'regressor__optimizer': optimizer,
                         'regressor__neurons': neurons,
                         'regressor__batch_size': batch_size,
-                        'regressor__epochs': epochs,
-                        'regressor__dropout_rate': dropout_rate,
-                        'regressor__activation': activation,
-                        'regressor__layers': layers
+                        'regressor__epochs': epochs
                      }
 
         # define base model
@@ -137,26 +136,16 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             model.compile(loss='mean_squared_error', optimizer='adam')
             return model
 
-        def lstm_model(optimizer='adam',activation="relu", neurons = 100, dropout_rate=0.2, layers = 1):
+        def lstm_model(optimizer='adam', neurons = 100):
             # LSTM layer expects inputs to have shape of (batch_size, timesteps, input_dim).
             # In keras you need to pass (timesteps, input_dim) for input_shape argument.
 
-            if layers == 1:
-                model = Sequential()
-                model.add(LSTM(neurons, input_shape=(9, 1), kernel_initializer='normal', activation=activation))
-                model.add(Dropout(dropout_rate))
-                model.add(Dense(1, kernel_initializer='normal'))
-                model.compile(loss='mean_squared_error', optimizer=optimizer)
-                return model
-            else:
-                model = Sequential()
-                model.add(LSTM(neurons, input_shape=(9, 1), return_sequences=True, kernel_initializer='normal', activation=activation))
-                model.add(Dropout(dropout_rate))
-                model.add(LSTM(neurons, input_shape=(9, 1), return_sequences=False, kernel_initializer='normal', activation=activation))
-                model.add(Dense(1, kernel_initializer='normal'))
-                model.compile(loss='mean_squared_error', optimizer=optimizer)
-                return model
-
+            model = Sequential()
+            model.add(LSTM(neurons, input_shape=(9, 1), kernel_initializer='normal', activation='relu'))
+            model.add(Dense(1, kernel_initializer='normal'))
+            model.compile(loss='mean_squared_error', optimizer=optimizer)
+            return model
+            
 
         # Create the regressor model
         if reg_type == 'LinearRegression':
@@ -339,7 +328,7 @@ def read_td_dataset(VERSIONS_AHEAD, WINDOW_SIZE):
 def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET):
     for project in DATASET:
         print('**************** %s ****************' % project)
-        #print(results[project][versions_ahead][reg_type])
+        print(results[project][versions_ahead][reg_type])
         #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
         for reg_type in ['LSTM']:
             print('*************** %s **************' % reg_type)
@@ -358,10 +347,15 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
                 params =  results[project][versions_ahead][reg_type]['params']
                 # test_set_r2 = results[project][versions_ahead][reg_type]['test_set_r2']
                 print("version ahead ", str(versions_ahead))
+                print ("mae_mean ", mae_mean)
+                print ("rmse_mean ", rmse_mean)
+                print("mape_mean ", mape_mean)
+                print("r2_mean ", r2_mean)
                 mae_mean2 = mae_mean.tolist()
                 rmse_mean2 = rmse_mean.tolist()
                 mape_mean2 = mape_mean.tolist()
                 r2_mean2 = r2_mean.tolist()
+
                 print("******* TOP PARAMS VERSIONS AHEAD ", str(versions_ahead))
                 print ("mae_mean ", abs(max(mae_mean2))," params ",params[mae_mean2.index(max(mae_mean2))])
                 print ("rmse_mean ", abs(max(rmse_mean2))," params ",params[rmse_mean2.index(max(rmse_mean2))])
@@ -398,8 +392,17 @@ if __name__ == '__main__':
                 
 
     WINDOW_SIZE = 2  # choose based on error minimization for different forecasting horizons
-    VERSIONS_AHEAD = [1, 5, 10, 20, 40]
-    #VERSIONS_AHEAD = [2,5]
+   # VERSIONS_AHEAD = [2, 5, 10, 20, 40]
+    VERSIONS_AHEAD = [2,5]
+    def parser(x):
+        #print(x)
+	    return datetime.strptime(x, '%d/%m/%Y')
+    series = read_csv('apache_kafka_measures.csv',sep=';',usecols=[0,1,2,3,4,5,7],  header=0, parse_dates=[0], index_col=0, squeeze=True, date_parser=parser)
+# summarize first few rows
+    print(series.head())
+# line plot
+    series.plot()
+    plt.show()
 
-    main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD)
+    #main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD)
 
