@@ -214,7 +214,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
                   'root_mean_squared_error': make_scorer(root_mean_squared_error, greater_is_better=False)}
 
         
-        scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False)
+        scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(),n_jobs=-1, scoring=scorer, cv=tscv, return_train_score=False)
 
         # Fill results dict object
         for key, value in scores.items():
