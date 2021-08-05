@@ -13,6 +13,7 @@ from keras.layers.recurrent import LSTM, GRU
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import GridSearchCV
+from tensorflow.keras import optimizers
 
 import time
 import tensorflow as tf
@@ -141,7 +142,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         def lstm_model(optimizer='adam', activation="relu", neurons = 100,learn_rate = 0.001, dropout_rate=0.2, layers = 1):
             # LSTM layer expects inputs to have shape of (batch_size, timesteps, input_dim).
             # In keras you need to pass (timesteps, input_dim) for input_shape argument.
-            opt = tf.optimizers.Adam(learning_rate=learn_rate)
+            opt = optimizers.Adam(learning_rate=learn_rate)
             if layers == 1:
                 model = Sequential()
                 model.add(LSTM(neurons, input_shape=(9, 1), kernel_initializer='normal', activation=activation))
