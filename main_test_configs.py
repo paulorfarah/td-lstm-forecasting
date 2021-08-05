@@ -104,18 +104,18 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         from sklearn.preprocessing import StandardScaler
         scaler = StandardScaler()
         #custom parameters for lstm
-        batch_size = [5,10]
-        epochs = [100,500,1000,1500]
+        batch_size = [5]
+        epochs = [100,500,1000]
         optimizer = ['adam']
-        learn_rate = [0.001, 0.01, 0.1, 0.2, 0.3]
+        learn_rate = [0.01, 0.1, 0.2]
         momentum = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9]
         init_mode = ['uniform', 'lecun_uniform', 'normal', 'zero', 'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform']
         #activation = ['softmax', 'softplus', 'softsign', 'relu', 'tanh', 'sigmoid', 'hard_sigmoid', 'linear']
         activation = ['relu']
         weight_constraint = [1, 2, 3, 4, 5]
-        dropout_rate = [0.1,0.2,0.25,0.3]
-        neurons = [10,50,100,150,200,250]
-        layers = [1,2]
+        dropout_rate = [0.1,0.2,0.25]
+        neurons = [10,50,100,150,200]
+        layers = [2]
 
         #param_grid = dict(optimizer = optimizer)
         param_grid = {
@@ -139,7 +139,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             model.compile(loss='mean_squared_error', optimizer='adam')
             return model
 
-        def lstm_model(optimizer='adam', activation="relu", neurons = 100,learn_rate = 0.001, dropout_rate=0.2, layers = 1):
+        def lstm_model(optimizer='adam', activation="relu", neurons = 100,learn_rate = 0.001, dropout_rate=0.2, layers = 2):
             # LSTM layer expects inputs to have shape of (batch_size, timesteps, input_dim).
             # In keras you need to pass (timesteps, input_dim) for input_shape argument.
             opt = optimizers.Adam(learning_rate=learn_rate)
