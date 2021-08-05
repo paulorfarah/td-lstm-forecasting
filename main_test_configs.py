@@ -104,16 +104,16 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         scaler = StandardScaler()
         #custom parameters for lstm
         batch_size = [5,10]
-        epochs = [500,1000,1500]
+        epochs = [100,500,1000,1500]
         optimizer = ['adam']
         learn_rate = [0.001, 0.01, 0.1, 0.2, 0.3]
         momentum = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9]
         init_mode = ['uniform', 'lecun_uniform', 'normal', 'zero', 'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform']
         #activation = ['softmax', 'softplus', 'softsign', 'relu', 'tanh', 'sigmoid', 'hard_sigmoid', 'linear']
-        activation = ['relu', 'tanh']
+        activation = ['relu']
         weight_constraint = [1, 2, 3, 4, 5]
-        dropout_rate = [0.2]
-        neurons = [50,100,150,200]
+        dropout_rate = [0.1,0.2,0.25,0.3]
+        neurons = [10,50,100,150,200,250]
         layers = [1,2]
 
         #param_grid = dict(optimizer = optimizer)
@@ -124,7 +124,8 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
                         'regressor__epochs': epochs,
                         'regressor__dropout_rate': dropout_rate,
                         'regressor__activation': activation,
-                        'regressor__layers': layers
+                        'regressor__layers': layers,
+                        'regressor__learn_rate': learn_rate
                      }
 
         # define base model
@@ -137,16 +138,16 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             model.compile(loss='mean_squared_error', optimizer='adam')
             return model
 
-        def lstm_model(optimizer='adam',activation="relu", neurons = 100, dropout_rate=0.2, layers = 1):
+        def lstm_model(optimizer='adam', activation="relu", neurons = 100,learn_rate = 0.001, dropout_rate=0.2, layers = 1):
             # LSTM layer expects inputs to have shape of (batch_size, timesteps, input_dim).
             # In keras you need to pass (timesteps, input_dim) for input_shape argument.
-
+            opt = tf.optimizers.Adam(learning_rate=learn_rate)
             if layers == 1:
                 model = Sequential()
                 model.add(LSTM(neurons, input_shape=(9, 1), kernel_initializer='normal', activation=activation))
                 model.add(Dropout(dropout_rate))
                 model.add(Dense(1, kernel_initializer='normal'))
-                model.compile(loss='mean_squared_error', optimizer=optimizer)
+                model.compile(loss='mean_squared_error', optimizer=opt)
                 return model
             else:
                 model = Sequential()
@@ -154,7 +155,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
                 model.add(Dropout(dropout_rate))
                 model.add(LSTM(neurons, input_shape=(9, 1), return_sequences=False, kernel_initializer='normal', activation=activation))
                 model.add(Dense(1, kernel_initializer='normal'))
-                model.compile(loss='mean_squared_error', optimizer=optimizer)
+                model.compile(loss='mean_squared_error', optimizer=opt)
                 return model
 
 
