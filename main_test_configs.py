@@ -115,7 +115,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         weight_constraint = [1, 2, 3, 4, 5]
         dropout_rate = [0.1,0.2,0.25]
         neurons = [10,50,100,150,200]
-        layers = [2]
+        layers = [1]
 
         #param_grid = dict(optimizer = optimizer)
         param_grid = {
