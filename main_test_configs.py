@@ -105,7 +105,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         scaler = StandardScaler()
         #custom parameters for lstm
         batch_size = [5]
-        epochs = [100,500,1000]
+        epochs = [100,500]
         optimizer = ['adam']
         learn_rate = [0.01, 0.1, 0.2]
         momentum = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9]
@@ -120,13 +120,13 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         #param_grid = dict(optimizer = optimizer)
         param_grid = {
                         'regressor__optimizer': optimizer,
-                        'regressor__neurons': neurons,
-                        'regressor__batch_size': batch_size,
+                       # 'regressor__neurons': neurons,
+                       # 'regressor__batch_size': batch_size,
                         'regressor__epochs': epochs,
-                        'regressor__dropout_rate': dropout_rate,
-                        'regressor__activation': activation,
-                        'regressor__layers': layers,
-                        'regressor__learn_rate': learn_rate
+                       # 'regressor__dropout_rate': dropout_rate,
+                       # 'regressor__activation': activation,
+                       # 'regressor__layers': layers,
+                       # 'regressor__learn_rate': learn_rate
                      }
 
         # define base model
@@ -345,31 +345,32 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
         #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
         for reg_type in ['LSTM']:
             print('*************** %s **************' % reg_type)
-            for versions_ahead in VERSIONS_AHEAD:
-                # Print scores
-                mae_mean = results[project][versions_ahead][reg_type]['mean_test_neg_mean_absolute_error']
-                #mae_std = results[project][versions_ahead][reg_type]['std_test_neg_mean_absolute_error']
-                #mse_mean = results[project][versions_ahead][reg_type]['mean_test_neg_mean_squared_error']
-                #mse_std = results[project][versions_ahead][reg_type]['std_test_neg_mean_squared_error']
-                mape_mean = results[project][versions_ahead][reg_type]['mean_test_mean_absolute_percentage_error']
-                #mape_std = results[project][versions_ahead][reg_type]['std_test_mean_absolute_percentage_error']
-                r2_mean = results[project][versions_ahead][reg_type]['mean_test_r2']
-                #r2_std = results[project][versions_ahead][reg_type]['std_test_r2']
-                rmse_mean = results[project][versions_ahead][reg_type]['mean_test_root_mean_squared_error']
-                #rmse_std = results[project][versions_ahead][reg_type]['std_test_root_mean_squared_error']
-                params =  results[project][versions_ahead][reg_type]['params']
-                # test_set_r2 = results[project][versions_ahead][reg_type]['test_set_r2']
-                print("version ahead ", str(versions_ahead))
-                mae_mean2 = mae_mean.tolist()
-                rmse_mean2 = rmse_mean.tolist()
-                mape_mean2 = mape_mean.tolist()
-                r2_mean2 = r2_mean.tolist()
-                print("******* TOP PARAMS VERSIONS AHEAD ", str(versions_ahead))
-                print ("mae_mean ", abs(max(mae_mean2))," params ",params[mae_mean2.index(max(mae_mean2))])
-                print ("rmse_mean ", abs(max(rmse_mean2))," params ",params[rmse_mean2.index(max(rmse_mean2))])
-                print("mape_mean ", abs(max(mape_mean2))," params ",params[mape_mean2.index(max(mape_mean2))])
-                print("r2_mean ", max(r2_mean2)," params ",params[r2_mean2.index(max(r2_mean2))])
-                #print('%0.3f,%0.3f,%0.3f,%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
+            configs =  results[project][1][reg_type]['params']
+            for i,conf in enumerate(configs):
+            #iterar sob o total de configuraçoes geradas
+                for versions_ahead in VERSIONS_AHEAD:
+                    # Print scores
+                    mae_mean = results[project][versions_ahead][reg_type]['mean_test_neg_mean_absolute_error']
+                    #mae_std = results[project][versions_ahead][reg_type]['std_test_neg_mean_absolute_error']
+                    #mse_mean = results[project][versions_ahead][reg_type]['mean_test_neg_mean_squared_error']
+                    #mse_std = results[project][versions_ahead][reg_type]['std_test_neg_mean_squared_error']
+                    mape_mean = results[project][versions_ahead][reg_type]['mean_test_mean_absolute_percentage_error']
+                    #mape_std = results[project][versions_ahead][reg_type]['std_test_mean_absolute_percentage_error']
+                    r2_mean = results[project][versions_ahead][reg_type]['mean_test_r2']
+                    #r2_std = results[project][versions_ahead][reg_type]['std_test_r2']
+                    rmse_mean = results[project][versions_ahead][reg_type]['mean_test_root_mean_squared_error']
+                    #rmse_std = results[project][versions_ahead][reg_type]['std_test_root_mean_squared_error']
+                    params =  results[project][versions_ahead][reg_type]['params']
+                    # test_set_r2 = results[project][versions_ahead][reg_type]['test_set_r2']
+                    mae_mean2 = mae_mean.tolist()
+                    rmse_mean2 = rmse_mean.tolist()
+                    mape_mean2 = mape_mean.tolist()
+                    r2_mean2 = r2_mean.tolist()
+                    print('%0.3f;%0.3f;%0.3f;%0.3f' % (abs(mae_mean2.index(i)), abs(rmse_mean.index(i)), abs(mape_mean.index(i)),r2_mean.index(i)))
+                    print("******* PARAMS VERSIONS AHEAD ", str(versions_ahead))
+                    print("params ",params[i])
+                   
+                    #print('%0.3f,%0.3f,%0.3f,%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
 
 
 
@@ -400,8 +401,8 @@ if __name__ == '__main__':
                 
 
     WINDOW_SIZE = 2  # choose based on error minimization for different forecasting horizons
-    VERSIONS_AHEAD = [1, 5, 10, 20, 40]
-    #VERSIONS_AHEAD = [2,5]
+   #VERSIONS_AHEAD = [1, 5, 10, 20, 40]
+    VERSIONS_AHEAD = [1,5]
 
     main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD)
 
