@@ -347,6 +347,7 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
             print('*************** %s **************' % reg_type)
             configs =  results[project][1][reg_type]['params']
             for i,conf in enumerate(configs):
+                print("Config ",str(i),configs[i])
             #iterar sob o total de configuraçoes geradas
                 for versions_ahead in VERSIONS_AHEAD:
                     # Print scores
@@ -366,10 +367,7 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
                     rmse_mean2 = rmse_mean.tolist()
                     mape_mean2 = mape_mean.tolist()
                     r2_mean2 = r2_mean.tolist()
-                    print(abs(mae_mean2[i]), abs(rmse_mean2[i]), abs(mape_mean2[i]),r2_mean2[i])
-                    print("******* PARAMS VERSIONS AHEAD", str(versions_ahead))
-                    print("params ",params[i])
-                   
+                    print(abs(mae_mean2[i]), abs(rmse_mean2[i]), abs(mape_mean2[i]),r2_mean2[i])                   
                     #print('%0.3f,%0.3f,%0.3f,%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
 
 
