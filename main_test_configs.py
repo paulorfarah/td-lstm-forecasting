@@ -104,29 +104,29 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         from sklearn.preprocessing import StandardScaler
         scaler = StandardScaler()
         #custom parameters for lstm
-        batch_size = [5]
-        epochs = [100,500]
+        batch_size = [5,10,15]
+        epochs = [100,500,1000]
         optimizer = ['adam']
         learn_rate = [0.01, 0.1, 0.2]
         momentum = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9]
         init_mode = ['uniform', 'lecun_uniform', 'normal', 'zero', 'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform']
         #activation = ['softmax', 'softplus', 'softsign', 'relu', 'tanh', 'sigmoid', 'hard_sigmoid', 'linear']
-        activation = ['relu']
+        activation = ['tanh','sigmoid']
         weight_constraint = [1, 2, 3, 4, 5]
         dropout_rate = [0.1,0.2,0.25]
         neurons = [10,50,100,150,200]
-        layers = [1]
+        layers = [1,2]
 
         #param_grid = dict(optimizer = optimizer)
         param_grid = {
                         'regressor__optimizer': optimizer,
-                       # 'regressor__neurons': neurons,
-                       # 'regressor__batch_size': batch_size,
+                        'regressor__neurons': neurons,
+                        'regressor__batch_size': batch_size,
                         'regressor__epochs': epochs,
-                       # 'regressor__dropout_rate': dropout_rate,
-                       # 'regressor__activation': activation,
-                       # 'regressor__layers': layers,
-                       # 'regressor__learn_rate': learn_rate
+                        'regressor__dropout_rate': dropout_rate,
+                        'regressor__activation': activation,
+                        'regressor__layers': layers,
+                        'regressor__learn_rate': learn_rate
                      }
 
         # define base model
@@ -347,7 +347,7 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
             print('*************** %s **************' % reg_type)
             configs =  results[project][1][reg_type]['params']
             for i,conf in enumerate(configs):
-                print("Config ",str(i),configs[i],"x","x",sep=';')
+                print(str(i),configs[i],"x","x",sep=';')
             #iterar sob o total de configuraçoes geradas
                 for versions_ahead in VERSIONS_AHEAD:
                     # Print scores
@@ -369,7 +369,6 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
                     r2_mean2 = r2_mean.tolist()
                     print(abs(mae_mean2[i]),abs(rmse_mean2[i]),abs(mape_mean2[i]),r2_mean2[i],sep=';')                   
                     #print('%0.3f,%0.3f,%0.3f,%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
-                print('')
 
 
 
