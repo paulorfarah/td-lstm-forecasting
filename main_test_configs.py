@@ -123,13 +123,13 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         #param_grid = dict(optimizer = optimizer)
         param_grid = {
                         'regressor__optimizer': optimizer,
-                       # 'regressor__neurons': neurons,
-                       # 'regressor__batch_size': batch_size,
-                       # 'regressor__epochs': epochs,
-                       # 'regressor__dropout_rate': dropout_rate,
-                       # 'regressor__activation': activation,
-                       # 'regressor__layers': layers,
-                       # 'regressor__learn_rate': learn_rate
+                        'regressor__neurons': neurons,
+                        'regressor__batch_size': batch_size,
+                        'regressor__epochs': epochs,
+                        'regressor__dropout_rate': dropout_rate,
+                        'regressor__activation': activation,
+                        'regressor__layers': layers,
+                        'regressor__learn_rate': learn_rate
                      }
 
         # define base model
