@@ -301,6 +301,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
 
             #### FIM ADAPTACAO MELO ESTRUTURA RECORRENTE ####
             
+            
             # Set X, Y
             X = data.iloc[:, data.columns != 'forecasted_total_principal'].values
             # Y = data.iloc[:, data.columns == 'forecasted_total_principal'].values
