@@ -14,6 +14,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import GridSearchCV
 from tensorflow.keras import optimizers
+#import csv
+from csv import writer
+
 
 import time
 import tensorflow as tf
@@ -111,7 +114,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         momentum = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9]
         init_mode = ['uniform', 'lecun_uniform', 'normal', 'zero', 'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform']
         #activation = ['softmax', 'softplus', 'softsign', 'relu', 'tanh', 'sigmoid', 'hard_sigmoid', 'linear']
-        activation = ['tanh','sigmoid']
+        activation = ['relu']
         weight_constraint = [1, 2, 3, 4, 5]
         dropout_rate = [0.1,0.2,0.25]
         neurons = [10,50,100,150,200]
@@ -120,13 +123,13 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         #param_grid = dict(optimizer = optimizer)
         param_grid = {
                         'regressor__optimizer': optimizer,
-                        'regressor__neurons': neurons,
-                        'regressor__batch_size': batch_size,
-                        'regressor__epochs': epochs,
-                        'regressor__dropout_rate': dropout_rate,
-                        'regressor__activation': activation,
-                        'regressor__layers': layers,
-                        'regressor__learn_rate': learn_rate
+                       # 'regressor__neurons': neurons,
+                       # 'regressor__batch_size': batch_size,
+                       # 'regressor__epochs': epochs,
+                       # 'regressor__dropout_rate': dropout_rate,
+                       # 'regressor__activation': activation,
+                       # 'regressor__layers': layers,
+                       # 'regressor__learn_rate': learn_rate
                      }
 
         # define base model
@@ -139,7 +142,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             model.compile(loss='mean_squared_error', optimizer='adam')
             return model
 
-        def lstm_model(optimizer='adam', activation="relu", neurons = 100,learn_rate = 0.001, dropout_rate=0.2, layers = 2):
+        def lstm_model(optimizer='adam', activation="tanh", neurons = 1,learn_rate = 0.1, dropout_rate=0.2, layers = 1):
             # LSTM layer expects inputs to have shape of (batch_size, timesteps, input_dim).
             # In keras you need to pass (timesteps, input_dim) for input_shape argument.
             K.clear_session()
@@ -339,11 +342,20 @@ def read_td_dataset(VERSIONS_AHEAD, WINDOW_SIZE):
    
     return X, Y, METRIC_KEYS_SDK4ED
 
+def append_new_line(file_name, row):
+    with open(file_name, 'a+') as f_object:
+        writer_object = writer(f_object,delimiter=";")
+        writer_object.writerow(row)
+        f_object.close()
+
 def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET):
     for project in DATASET:
         print('**************** %s ****************' % project)
         #print(results[project][versions_ahead][reg_type])
         #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
+       
+        filename = 'results/' + project + '.csv'
+
         for reg_type in ['LSTM']:
             print('*************** %s **************' % reg_type)
             configs =  results[project][1][reg_type]['params']
@@ -363,14 +375,40 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
                     rmse_mean = results[project][versions_ahead][reg_type]['mean_test_root_mean_squared_error']
                     #rmse_std = results[project][versions_ahead][reg_type]['std_test_root_mean_squared_error']
                     params =  results[project][versions_ahead][reg_type]['params']
+                    mean_fit_time = results[project][versions_ahead][reg_type]['mean_fit_time']
+                    std_fit_time = results[project][versions_ahead][reg_type]['std_fit_time']
+                    mean_score_time = results[project][versions_ahead][reg_type]['mean_score_time']
+                    std_score_time = results[project][versions_ahead][reg_type]['std_score_time']
                     # test_set_r2 = results[project][versions_ahead][reg_type]['test_set_r2']
+                    mean_fit_time2 = mean_fit_time.tolist()
+                    std_fit_time2 = std_fit_time.tolist()
+                    mean_score_time2 = mean_score_time.tolist()
+                    std_score_time2 = std_score_time.tolist()
                     mae_mean2 = mae_mean.tolist()
                     rmse_mean2 = rmse_mean.tolist()
                     mape_mean2 = mape_mean.tolist()
                     r2_mean2 = r2_mean.tolist()
+                    config = str(i) + "-" + str(versions_ahead) + "-" + str(configs[i])
+                    # Exp;dataset,config;mean_fit_time;std_fit_time;mean_score_time;TempoExecution;mae_mean;rmse_mean;mape_mean;r2_mean 
+                    line = []
+                    line.append('1')
+                    line.append(project)
+                    line.append(config)
+                    line.append(mean_fit_time2[i])
+                    line.append(std_fit_time2[i])
+                    line.append(mean_score_time2[i])
+                    line.append(std_score_time2[i])
+                    line.append(abs(mae_mean2[i]))
+                    line.append(abs(rmse_mean2[i]))
+                    line.append(abs(mape_mean2[i]))
+                    line.append(r2_mean2[i])
+                    with open(filename, 'a+') as f_object:
+                        writer_object = writer(f_object,delimiter=";")
+                        writer_object.writerow(line)
+                        f_object.close()
+
                     print(abs(mae_mean2[i]),abs(rmse_mean2[i]),abs(mape_mean2[i]),r2_mean2[i],sep=';')                   
                     #print('%0.3f,%0.3f,%0.3f,%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
-
 
 
 if __name__ == '__main__':
