@@ -438,8 +438,8 @@ if __name__ == '__main__':
                 
 
     WINDOW_SIZE = 2  # choose based on error minimization for different forecasting horizons
-   #VERSIONS_AHEAD = [1, 5, 10, 20, 40]
-    VERSIONS_AHEAD = [1,5]
+    VERSIONS_AHEAD = [1, 5, 10, 20, 40]
+    #VERSIONS_AHEAD = [1,5]
 
     main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD)
 
