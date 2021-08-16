@@ -90,7 +90,7 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
     return agg
 
 
-def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
+def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
 
     METRIC_KEYS_SDK4ED = ['bugs', 'duplicated_blocks', 'code_smells',
                           # 'comment_lines', 'ncloc', 'uncovered_lines', 'vulnerabilities', 'complexity',
@@ -98,7 +98,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
     results = {}
     results['_info'] = {'metrics': METRIC_KEYS_SDK4ED, 'window_size': WINDOW_SIZE, 'versions_ahead': VERSIONS_AHEAD}
 
-    def create_regressor(reg_type, X, Y, project, versions_ahead):
+    def create_regressor(reg_type, X, Y, project, versions_ahead, config):
         # Splitting the dataset into the Training set and Test set
         #     from sklearn.model_selection import train_test_split
         #     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.2, random_state = 0, shuffle = False)
@@ -119,6 +119,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         dropout_rate = [0.1,0.2,0.25]
         neurons = [10,50,100,150,200]
         layers = [1,2]
+        config = [1,2,3]
 
         #param_grid = dict(optimizer = optimizer)
         param_grid = {
@@ -129,7 +130,38 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
                         'regressor__dropout_rate': dropout_rate,
                         'regressor__activation': activation,
                         'regressor__layers': layers,
-                        'regressor__learn_rate': learn_rate
+                        'regressor__learn_rate': learn_rate,
+                        'regressor__config': config
+                     }
+        param_grid_config_1 = {
+                        'regressor__optimizer': ['adam'],
+                        'regressor__neurons': [50],
+                        'regressor__batch_size': [5],
+                        'regressor__epochs': [1000],
+                        'regressor__dropout_rate': [0.25],
+                        'regressor__activation': ['relu'],
+                        'regressor__layers': [1],
+                        'regressor__learn_rate': [0.01]
+                     }
+        param_grid_config_2 = {
+                        'regressor__optimizer': ['adam'],
+                        'regressor__neurons': [50],
+                        'regressor__batch_size': [15],
+                        'regressor__epochs': [1000],
+                        'regressor__dropout_rate': [0.1],
+                        'regressor__activation': ['relu'],
+                        'regressor__layers': [2],
+                        'regressor__learn_rate': [0.01]
+                     }
+        param_grid_config_3 = {
+                        'regressor__optimizer': ['adam'],
+                        'regressor__neurons': [150],
+                        'regressor__batch_size': [10],
+                        'regressor__epochs': [500],
+                        'regressor__dropout_rate': [0.1],
+                        'regressor__activation': ['relu'],
+                        'regressor__layers': [2],
+                        'regressor__learn_rate': [0.01]
                      }
 
         # define base model
@@ -142,7 +174,8 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             model.compile(loss='mean_squared_error', optimizer='adam')
             return model
 
-        def lstm_model(optimizer='adam', activation="tanh", neurons = 1,learn_rate = 0.1, dropout_rate=0.2, layers = 1):
+       
+        def lstm_model(optimizer='adam', activation="relu", neurons = 50,learn_rate = 0.1, dropout_rate=0.2, layers = 1):
             # LSTM layer expects inputs to have shape of (batch_size, timesteps, input_dim).
             # In keras you need to pass (timesteps, input_dim) for input_shape argument.
             K.clear_session()
@@ -235,7 +268,13 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             X = X.reshape((X.shape[0], X.shape[1], n_features))
 
         #scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False)
-        search = GridSearchCV(estimator=pipeline, param_grid=param_grid, n_jobs=-1,refit='mean_absolute_percentage_error' , cv=tscv, scoring=scorer, return_train_score=False)
+        p_grid  = param_grid_config_1
+        if config == 2:
+            p_grid = param_grid_config_2
+        if config == 3:
+            p_grid = param_grid_config_3
+
+        search = GridSearchCV(estimator=pipeline, param_grid=p_grid, n_jobs=-1,refit='mean_absolute_percentage_error' , cv=tscv, scoring=scorer, return_train_score=False)
         print("fiting....")
         search.fit(X=X, y=Y.ravel())
 
@@ -301,7 +340,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
 
             #### FIM ADAPTACAO MELO ESTRUTURA RECORRENTE ####
             
-            
+
             # Set X, Y
             X = data.iloc[:, data.columns != 'forecasted_total_principal'].values
             # Y = data.iloc[:, data.columns == 'forecasted_total_principal'].values
@@ -309,12 +348,12 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
             for reg_type in ['LSTM']:
                 if(reg_type == 'LSTM'):
-                    regressor = create_regressor(reg_type, X, Y, project, versions_ahead)
+                    regressor = create_regressor(reg_type, X, Y, project, versions_ahead, config)
                     #regressor = create_regressor(reg_type, timeseries_tensor, timeseries_labels, project, versions_ahead)
                 else:
-                    regressor = create_regressor(reg_type, X, Y, project, versions_ahead)
+                    regressor = create_regressor(reg_type, X, Y, project, versions_ahead, config)
 
-    print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET)
+    print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET, EXP)
 
 
 def read_dataset(VERSIONS_AHEAD, WINDOW_SIZE):
@@ -349,13 +388,13 @@ def append_new_line(file_name, row):
         writer_object.writerow(row)
         f_object.close()
 
-def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET):
+def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET, EXP):
     for project in DATASET:
         print('**************** %s ****************' % project)
         #print(results[project][versions_ahead][reg_type])
         #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
        
-        filename = 'results/' + project + '.csv'
+        filename = 'results/' + project + '-round2' + '.csv'
 
         for reg_type in ['LSTM']:
             print('*************** %s **************' % reg_type)
@@ -392,7 +431,7 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
                     config = str(i) + "-" + str(versions_ahead) + "-" + str(configs[i])
                     # Exp;dataset,config;mean_fit_time;std_fit_time;mean_score_time;TempoExecution;mae_mean;rmse_mean;mape_mean;r2_mean 
                     line = []
-                    line.append('1')
+                    line.append(EXP)
                     line.append(project)
                     line.append(config)
                     line.append(mean_fit_time2[i])
@@ -439,8 +478,11 @@ if __name__ == '__main__':
                 
 
     WINDOW_SIZE = 2  # choose based on error minimization for different forecasting horizons
+    EXPERIMENTS = 5
+    CONFIGS = 3
     VERSIONS_AHEAD = [1, 5, 10, 20, 40]
     #VERSIONS_AHEAD = [1,5]
-
-    main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD)
+    for config in range(CONFIGS):
+     for exp in range(EXPERIMENTS): 
+        main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,exp,config)
 
