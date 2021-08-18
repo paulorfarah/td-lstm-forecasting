@@ -374,7 +374,7 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
         #print(results[project][versions_ahead][reg_type])
         #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
        
-        filename = 'results/' + project + '-round2' + '.csv'
+        filename = 'results/' + project + '-round3' + '.csv'
 
         for reg_type in ['LSTM']:
             print('*************** %s **************' % reg_type)
@@ -449,7 +449,7 @@ if __name__ == '__main__':
                 
 
     WINDOW_SIZE = 2  # choose based on error minimization for different forecasting horizons
-    EXPERIMENTS = 5
+    EXPERIMENTS = 10
     CONFIGS = 3
     VERSIONS_AHEAD = [1, 5, 10, 20, 40]
     #VERSIONS_AHEAD = [1]
