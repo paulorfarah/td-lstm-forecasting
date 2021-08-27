@@ -331,7 +331,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
             for reg_type in ['LSTM']:
                 if(reg_type == 'LSTM'):
                     #regressor = create_regressor(reg_type, X, Y, project, versions_ahead, config)
-                    regressor = create_regressor(reg_type, timeseries_tensor, timeseries_labels, project, versions_ahead)
+                    regressor = create_regressor(reg_type, timeseries_tensor, timeseries_labels, project, versions_ahead, config)
                 else:
                     regressor = create_regressor(reg_type, X, Y, project, versions_ahead, config)
 
