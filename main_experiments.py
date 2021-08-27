@@ -260,10 +260,10 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
                                                                 greater_is_better=False),
                   'root_mean_squared_error': make_scorer(root_mean_squared_error, greater_is_better=False)}
 
-        if reg_type == 'LSTM':
+        #if reg_type == 'LSTM':
             # reshape from [samples, timesteps] into [samples, timesteps, features]
-            n_features = 1
-            X = X.reshape((X.shape[0], X.shape[1], n_features))
+        #    n_features = 1
+        #    X = X.reshape((X.shape[0], X.shape[1], n_features))
 
         #scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False)
        
@@ -330,8 +330,8 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
             #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
             for reg_type in ['LSTM']:
                 if(reg_type == 'LSTM'):
-                    regressor = create_regressor(reg_type, X, Y, project, versions_ahead, config)
-                    #regressor = create_regressor(reg_type, timeseries_tensor, timeseries_labels, project, versions_ahead)
+                    #regressor = create_regressor(reg_type, X, Y, project, versions_ahead, config)
+                    regressor = create_regressor(reg_type, timeseries_tensor, timeseries_labels, project, versions_ahead)
                 else:
                     regressor = create_regressor(reg_type, X, Y, project, versions_ahead, config)
 
