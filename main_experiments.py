@@ -234,7 +234,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'LSTM':
             from keras.wrappers.scikit_learn import KerasRegressor
-            regressor = KerasRegressor(build_fn=lstm_model3, epochs=1500, batch_size=15, verbose=False)
+            regressor = KerasRegressor(build_fn=lstm_model3, epochs=1500, batch_size=10, verbose=False)
             if config == 2:
                 regressor = KerasRegressor(build_fn=lstm_model2, epochs=1000, batch_size=15, verbose=False)
             if config == 3:
