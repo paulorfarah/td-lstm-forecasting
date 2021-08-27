@@ -169,7 +169,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
                 model.compile(loss='mean_squared_error', optimizer=opt)
                 return model
         
-        def lstm_model3(optimizer='adam', activation="relu", neurons = 100,learn_rate = 0.01, dropout_rate=0.1, layers = 2):
+        def lstm_model3(optimizer='adam', activation="relu", neurons = 150,learn_rate = 0.01, dropout_rate=0.1, layers = 2):
             # LSTM layer expects inputs to have shape of (batch_size, timesteps, input_dim).
             # In keras you need to pass (timesteps, input_dim) for input_shape argument.
             K.clear_session()
