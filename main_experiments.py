@@ -168,27 +168,29 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
                 model.add(Dense(1, kernel_initializer='normal'))
                 model.compile(loss='mean_squared_error', optimizer=opt)
                 return model
-        def lstm_model3(optimizer='adam', activation="relu", neurons = 150,learn_rate = 0.01, dropout_rate=0.1, layers = 2):
+        
+        def lstm_model3(optimizer='adam', activation="relu", neurons = 100,learn_rate = 0.01, dropout_rate=0.1, layers = 2):
             # LSTM layer expects inputs to have shape of (batch_size, timesteps, input_dim).
             # In keras you need to pass (timesteps, input_dim) for input_shape argument.
             K.clear_session()
             opt = optimizers.Adam(learning_rate=learn_rate)
             if layers == 1:
                 model = Sequential()
-                model.add(LSTM(neurons, input_shape=(9, 1), kernel_initializer='normal', activation=activation))
+                model.add(LSTM(neurons, input_shape=(3, 3), kernel_initializer='normal', activation=activation))
                 model.add(Dropout(dropout_rate))
                 model.add(Dense(1, kernel_initializer='normal'))
                 model.compile(loss='mean_squared_error', optimizer=opt)
                 return model
             else:
                 model = Sequential()
-                model.add(LSTM(neurons, input_shape=(9, 1), return_sequences=True, kernel_initializer='normal', activation=activation))
+                model.add(LSTM(neurons, input_shape=(3, 3), return_sequences=True, kernel_initializer='normal', activation=activation))
                 model.add(Dropout(dropout_rate))
-                model.add(LSTM(neurons, input_shape=(9, 1), return_sequences=False, kernel_initializer='normal', activation=activation))
+                model.add(LSTM(neurons, input_shape=(3, 3), return_sequences=False, kernel_initializer='normal', activation=activation))
                 model.add(Dense(1, kernel_initializer='normal'))
                 model.compile(loss='mean_squared_error', optimizer=opt)
                 return model
 
+        
         # Create the regressor model
         if reg_type == 'LinearRegression':
             # Fitting Multiple Linear Regression to the Training set
@@ -232,7 +234,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'LSTM':
             from keras.wrappers.scikit_learn import KerasRegressor
-            regressor = KerasRegressor(build_fn=lstm_model, epochs=1000, batch_size=5, verbose=False)
+            regressor = KerasRegressor(build_fn=lstm_model3, epochs=1500, batch_size=15, verbose=False)
             if config == 2:
                 regressor = KerasRegressor(build_fn=lstm_model2, epochs=1000, batch_size=15, verbose=False)
             if config == 3:
@@ -374,7 +376,7 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
         #print(results[project][versions_ahead][reg_type])
         #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
        
-        filename = 'results/' + project + '-round3' + '.csv'
+        filename = 'results/' + project + '-round-melo' + '.csv'
 
         for reg_type in ['LSTM']:
             print('*************** %s **************' % reg_type)
@@ -449,8 +451,8 @@ if __name__ == '__main__':
                 
 
     WINDOW_SIZE = 2  # choose based on error minimization for different forecasting horizons
-    EXPERIMENTS = 10
-    CONFIGS = 3
+    EXPERIMENTS = 2
+    CONFIGS = 1
     VERSIONS_AHEAD = [1, 5, 10, 20, 40]
     #VERSIONS_AHEAD = [1]
     for config in range(1,CONFIGS+1):
