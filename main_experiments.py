@@ -375,7 +375,7 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
         #print(results[project][versions_ahead][reg_type])
         #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
        
-        filename = 'results/' + project + '-round-melo' + '.csv'
+        filename = 'results/' + project+ '-test-melo.csv'
 
         for reg_type in ['LSTM']:
             print('*************** %s **************' % reg_type)
@@ -401,7 +401,7 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
 
                 print('%0.3f;%0.3f;%0.3f;%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
                 
-                c = str(EXP) + "-" + str(versions_ahead) + "-" + str(CONFIG)
+                c = str(versions_ahead) + "C" + str(CONFIG)
                 # Exp;dataset,config;mean_fit_time;std_fit_time;mean_score_time;TempoExecution;mae_mean;rmse_mean;mape_mean;r2_mean 
                 line = []
                 line.append(EXP)
@@ -429,23 +429,23 @@ if __name__ == '__main__':
     # 'AMC', 'WMC', 'DIT', 'NOC', 'RFC', 'CBO', 'Ca', 'Ce', 'CBM', 'IC', 'LCOM', 'LCOM3', 'CAM', 'NPM', 'DAM', 'MOA']
     # 'Security Index', 'blocker_violations', 'critical_violations', 'major_violations', 'minor_violations', 'info_violations']
     DATASET = [#'_benchmark_repository_measures',
-               # 'apache_groovy_measures',
-               # 'apache_incubator_dubbo_measures',
+                'apache_groovy_measures',
+                'apache_incubator_dubbo_measures',
                'apache_kafka_measures'
-               # 'apache_nifi_measures',
-               # 'apache_ofbiz_measures',
-               # 'apache_systemml_measures',
-               # 'commonsio_measures',
-               # 'company_projectA_measures',
-               # 'company_projectB_measures',
-               # 'google_guava_measures',
-               # 'igniterealtime_openfire_measures',
-                #'java_websocket_measures',
-               # 'jenkinsci_jenkins_measures',
-               # 'spring-projects_spring-boot_measures',
-                #'square_okhttp_measures',
-                #'square_retrofit_measures',
-                #'zxing_zxing_measures'
+                'apache_nifi_measures',
+                'apache_ofbiz_measures',
+                'apache_systemml_measures',
+                'commonsio_measures',
+                'company_projectA_measures',
+                'company_projectB_measures',
+                'google_guava_measures',
+                'igniterealtime_openfire_measures',
+                'java_websocket_measures',
+                'jenkinsci_jenkins_measures',
+                'spring-projects_spring-boot_measures',
+                'square_okhttp_measures',
+                'square_retrofit_measures',
+                'zxing_zxing_measures'
                  ]
                 
 
