@@ -266,7 +266,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
 
         #scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False)
        
-        scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(),n_jobs=-1, scoring=scorer, cv=tscv, return_train_score=False)
+        scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(),n_jobs=15, scoring=scorer, cv=tscv, return_train_score=False)
         print("fiting....")
         for key, value in scores.items():
             #print(key, value)
