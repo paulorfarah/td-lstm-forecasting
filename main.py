@@ -1,4 +1,5 @@
 # Importing the libraries
+import csv
 import sys
 
 import numpy as np
@@ -13,6 +14,48 @@ from math import sqrt
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from tensorflow.python.ops.metrics_impl import root_mean_squared_error
 import mysql.connector as connection
+
+df_params = pd.read_csv('parameters.csv')
+
+def plot_results():
+    # Initialize the lists for X and Y
+
+    data = pd.read_csv('mape.csv')
+
+    df = pd.DataFrame(data)
+    # print(df.groupby('Weeks ahead').head())
+
+    for i in [1, 5, 10, 20, 40]:
+        df_1 = df[df['Horizon'] == i]
+        print(df_1.head())
+        #
+        labels = list(df_1.iloc[:, 1])
+        # Y = [list(df_1.iloc[:, 2]), list(df_1.iloc[:, 3])]
+        x = np.arange(len(labels))  # the label locations
+
+        width = 0.35  # the width of the bars
+        new = list(df_1.iloc[:, 18])
+        original = list(df_1.iloc[:, 19])
+
+        fig, ax = plt.subplots()
+        rects1 = ax.bar(x - width / 2, original, width, label='Original study')
+        rects2 = ax.bar(x + width / 2, new, width, label='New study')
+
+        # Add some text for labels, title and custom x-axis tick labels, etc.
+        ax.set_ylabel('MAPE(%)')
+        # ax.set_title('Scores by group and gender')
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels)
+        ax.legend()
+        plt.xticks(rotation=30)
+        ax.bar_label(rects1, padding=3)
+        ax.bar_label(rects2, padding=3)
+
+        fig.tight_layout()
+
+        # plt.show()
+        plt.savefig('results/mape' + str(i) + '.pdf')
+
 
 
 def score_lstm(estimator, X, y, scoring, cv):
@@ -32,11 +75,11 @@ def score_lstm(estimator, X, y, scoring, cv):
     #                                                         greater_is_better=False),
     #           'root_mean_squared_error': make_scorer(root_mean_squared_error, greater_is_better=False)}
 
-    print('X_test: ', X_test)
-    print('y:', y.shape)
-    print('y_train:', y_train.shape)
-    print('ytest: ', y_test.shape)
-    print('y_pred:', y_pred.shape)
+    # print('X_test: ', X_test)
+    # print('y:', y.shape)
+    # print('y_train:', y_train.shape)
+    # print('ytest: ', y_test.shape)
+    # print('y_pred:', y_pred.shape)
     scoring['neg_mean_absolute_error'] = mean_absolute_error(y_test, y_pred)
     scoring['neg_mean_squared_error'] = mean_squared_error(y_test, y_pred)
     scoring['r2'] = r2_score(y_test, y_pred)
@@ -78,7 +121,6 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
     return agg
 
 def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
-
 
 
     # X, y, METRIC_KEYS_SDK4ED = read_dataset(VERSIONS_AHEAD, WINDOW_SIZE)
@@ -200,6 +242,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             return model
 
         # Create the regressor model
+        name_project = project.replace('data/', '')
         if reg_type == 'LinearRegression':
             # Fitting Multiple Linear Regression to the Training set
             from sklearn.linear_model import LinearRegression
@@ -208,32 +251,59 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         if reg_type == 'LassoRegression':
             # Fitting Lasso Regression to the Training set
             from sklearn.linear_model import Lasso
-            regressor = Lasso(alpha=100000)
+            alpha =  df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (df_params['parameter'] == 'alpha')]['value']
+            regressor = Lasso(alpha=int(alpha))
             pipeline = Pipeline([('regressor', regressor)])
         if reg_type == 'RidgeRegression':
             # Fitting Ridge Regression to the Training set
             from sklearn.linear_model import Ridge
-            regressor = Ridge(alpha=1000000)
+            alpha = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
+                        df_params['parameter'] == 'alpha')]['value']
+            # print("alpha"+ str(alpha))
+            regressor = Ridge(alpha=int(alpha))
             pipeline = Pipeline([('regressor', regressor)])
         if reg_type == 'SGDRegression':
             # Fitting SGD Regression to the Training set
             from sklearn.linear_model import SGDRegressor
-            regressor = SGDRegressor(max_iter=1000, tol=1e-3)
+            max_iter = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
+                        df_params['parameter'] == 'max_iter')]['value']
+
+            # print(max_iter)
+            regressor = SGDRegressor(max_iter=int(max_iter), tol=1e-3)
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'SVR_linear':
             # Fitting linear SVR to the dataset
             from sklearn.svm import SVR
-            regressor = SVR(kernel='linear', C=10000)
+            C = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
+                    df_params['parameter'] == 'C')]['value']
+            regressor = SVR(kernel='linear', C=int(C))
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'SVR_rbf':
             # Fitting SVR to the dataset
             from sklearn.svm import SVR
-            regressor = SVR(kernel='rbf', gamma=0.01, C=10000)
+            gamma = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
+                    df_params['parameter'] == 'gamma')]['value']
+            C = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
+                    df_params['parameter'] == 'C')]['value']
+            # print("C = df_params[(df_params['project'] == " + name_project + ") & (df_params['model'] == " + reg_type + ") & (df_params['parameter'] == 'C')]['value']")
+            regressor = SVR(kernel='rbf', gamma=float(gamma), C=int(C))
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'RandomForestRegressor':
             # Fitting Random Forest Regression to the dataset
             from sklearn.ensemble import RandomForestRegressor
-            regressor = RandomForestRegressor(n_estimators=100, random_state=0)
+            n_estimators = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
+                    df_params['parameter'] == 'n_estimators')]['value']
+            random_state = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
+                    df_params['parameter'] == 'random_state')]['value']
+            max_depth = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
+                    df_params['parameter'] == 'max_depth')]['value']
+            # print("n_est: " + n_estimators)
+            # print("max_d: ")
+            # print(max_depth)
+            if max_depth.empty:
+                regressor = RandomForestRegressor(n_estimators=int(n_estimators), random_state=0)
+            else:
+                regressor = RandomForestRegressor(n_estimators=int(n_estimators), random_state=0, max_depth=int(max_depth))
             pipeline = Pipeline([('regressor', regressor)])
         elif reg_type == 'ANN':
             # Fitting ANN to the dataset
@@ -247,7 +317,15 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             pipeline = Pipeline([('regressor', regressor)])
 
         from sklearn.model_selection import TimeSeriesSplit
-        tscv = TimeSeriesSplit(n_splits=5)
+
+        n_splits = 5
+        list_split4 = ['data/apache_ofbiz_measures', 'data/apache_nifi_measures', 'data/apache_incubator_dubbo_measures',
+                       'data/square_retrofit_measures', 'data/spring-projects_spring-boot_measures', 'data/java_websocket_measures',
+                       'data/zxing_zxing_measures', 'data/igniterealtime_openfire_measures']
+
+        if project in list_split4:
+            n_splits = 4
+        tscv = TimeSeriesSplit(n_splits=n_splits)
 
         from sklearn.metrics import make_scorer
         def mean_absolute_percentage_error(y_true, y_pred):
@@ -269,8 +347,8 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
             n_features = 1
             X = X.reshape((X.shape[0], X.shape[1], n_features))
 
-        print(X.shape)
-        print(Y.shape)
+        # print(X.shape)
+        # print(Y.shape)
         # if reg_type == 'LSTM':
         #     scores = score_lstm(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv)
         # else:
@@ -278,7 +356,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
 
         # Fill results dict object
         for key, value in scores.items():
-            print(key, value)
+            # print(key, value)
             scores[key] = value.tolist()
         results[project][versions_ahead][reg_type] = scores
 
@@ -312,45 +390,42 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
 
             # Set X, Y
             X = data.iloc[:, data.columns != 'forecasted_total_principal'].values
+
             # Y = data.iloc[:, data.columns == 'forecasted_total_principal'].values
             Y = data.forecasted_total_principal.values
-            for i in range(len(X)):
-                print(X[i], Y[i])
-
-
-
-
-            # for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor']:
-            for reg_type in ['RandomForestRegressor', 'LSTM']:
+            # for i in range(len(X)):
+            #     print(X[i], Y[i])
+            for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor']:
+            # for reg_type in ['LinearRegression']:
                 regressor = create_regressor(reg_type, X, Y, project, versions_ahead)
 
-    print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead)
+    print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET)
 
 
-def read_dataset(VERSIONS_AHEAD, WINDOW_SIZE):
-    return read_td_dataset(VERSIONS_AHEAD, WINDOW_SIZE)
+# def read_dataset(VERSIONS_AHEAD, WINDOW_SIZE):
+#     return read_td_dataset(VERSIONS_AHEAD, WINDOW_SIZE)
 
 
-def read_td_dataset(VERSIONS_AHEAD, WINDOW_SIZE):
-    METRIC_KEYS_SDK4ED = ['bugs', 'duplicated_blocks', 'code_smells',
-                          # 'comment_lines', 'ncloc', 'uncovered_lines', 'vulnerabilities', 'complexity',
-                          'sqale_index', 'reliability_remediation_effort', 'security_remediation_effort']
-
-    # Importing the dataset
-    dataset = pd.read_csv('apache_kafka_measures.csv', sep=";", usecols=METRIC_KEYS_SDK4ED)
-    dataset['total_principal'] = dataset['reliability_remediation_effort'] + dataset['security_remediation_effort'] + \
-                                 dataset['sqale_index']
-    dataset = dataset.drop(columns=['sqale_index', 'reliability_remediation_effort', 'security_remediation_effort'])
-    # Adding time-shifted prior and future period
-    data = series_to_supervised(dataset.values, n_in=WINDOW_SIZE)
-    # Append dependend variable column with value equal to next version's total_principal
-    data['forecasted_total_principal'] = data['var4(t)'].shift(-VERSIONS_AHEAD)
-    data = data.drop(data.index[-VERSIONS_AHEAD:])
-    # Include/remove TD as independent variable
-    data = data.drop(columns=['var4(t-2)', 'var4(t-1)'])
-    X = data.iloc[:, data.columns != 'forecasted_total_principal'].values
-    Y = data.iloc[:, data.columns == 'forecasted_total_principal'].values
-    return X, Y, METRIC_KEYS_SDK4ED
+# def read_td_dataset(VERSIONS_AHEAD, WINDOW_SIZE):
+#     METRIC_KEYS_SDK4ED = ['bugs', 'duplicated_blocks', 'code_smells',
+#                           # 'comment_lines', 'ncloc', 'uncovered_lines', 'vulnerabilities', 'complexity',
+#                           'sqale_index', 'reliability_remediation_effort', 'security_remediation_effort']
+#
+#     # Importing the dataset
+#     dataset = pd.read_csv('apache_kafka_measures.csv', sep=";", usecols=METRIC_KEYS_SDK4ED)
+#     dataset['total_principal'] = dataset['reliability_remediation_effort'] + dataset['security_remediation_effort'] + \
+#                                  dataset['sqale_index']
+#     dataset = dataset.drop(columns=['sqale_index', 'reliability_remediation_effort', 'security_remediation_effort'])
+#     # Adding time-shifted prior and future period
+#     data = series_to_supervised(dataset.values, n_in=WINDOW_SIZE)
+#     # Append dependend variable column with value equal to next version's total_principal
+#     data['forecasted_total_principal'] = data['var4(t)'].shift(-VERSIONS_AHEAD)
+#     data = data.drop(data.index[-VERSIONS_AHEAD:])
+#     # Include/remove TD as independent variable
+#     data = data.drop(columns=['var4(t-2)', 'var4(t-1)'])
+#     X = data.iloc[:, data.columns != 'forecasted_total_principal'].values
+#     Y = data.iloc[:, data.columns == 'forecasted_total_principal'].values
+#     return X, Y, METRIC_KEYS_SDK4ED
 
 def read_refactoring_dataset():
     try:
@@ -363,12 +438,16 @@ def read_refactoring_dataset():
     except:
         print(sys.exc_info())
 
-def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead):
-    for project in ['apache_kafka_measures']:
-        print('**************** %s ****************' % project)
-        print(results[project][versions_ahead][reg_type])
-        for reg_type in ['RandomForestRegressor', 'LSTM']: #, 'LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf',
-                         #'SVR_linear', 'RandomForestRegressor']:
+def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, project_list):
+    df_res = pd.DataFrame(columns=['Model', 'Horizon', 'apache_groovy', 'apache_incubator_dubbo', 'apache_kafka', 'apache_nifi', 'apache_ofbiz', 'apache_systemml',
+                          'commonsio', 'google_guava', 'igniterealtime_openfire', 'java_websocket', 'jenkinsci_jenkins',
+                          'spring-projects_spring-boot', 'square_okhttp', 'square_retrofit', 'zxing_zxing'])
+
+    for project in project_list:
+        # print('**************** %s ****************' % project)
+        # print(results[project][versions_ahead][reg_type])
+        for reg_type in ['LinearRegression', 'LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf',
+                         'SVR_linear', 'RandomForestRegressor']:
             print('================ %s ================' % reg_type)
             for versions_ahead in VERSIONS_AHEAD:
                 # Print scores
@@ -386,17 +465,58 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead):
                 rmse_std = np.asarray(results[project][versions_ahead][reg_type]['test_root_mean_squared_error']).std()
                 # test_set_r2 = results[project][versions_ahead][reg_type]['test_set_r2']
 
-                print('%0.3f;%0.3f;%0.3f;%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
+                print('%d: %0.3f;%0.3f;%0.3f;%0.3f' % (versions_ahead, abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
+                project_name = project.replace('data/', '').replace('_measures', '')
+                filterinDataframe = df_res[(df_res['Model'] == reg_type) & (df_res['Horizon'] == versions_ahead)]
+                if not filterinDataframe.empty:
+                    df_res.loc[(df_res['Model'] == reg_type) & (df_res['Horizon'] == versions_ahead), project_name] = abs(mape_mean)
+
+                else:
+                    res = {'Model': reg_type, 'Horizon': versions_ahead, project_name: abs(mape_mean)}
+                    df_res.loc[len(df_res)] = res
+
+    df_res['mean'] = df_res.iloc[:, 2:17].mean(axis=1)
+
+    original_study = [3.47, 1.39, 1.44, 3.19, 6.97, 2.04, 5.18, 8.62, 4.11, 3.91, 7.45, 12.92, 6.76, 5.94, 18.39, 9.24, 8.34, 15.80, 17.01, 15.03, 8.00, 18.65, 10.57, 10.66, 15.56, 21.93, 14.01, 7.38, 10.56, 8.61, 9.34, 8.98, 11.18, 8.31, 5.94]
+    df_res['original_study'] = original_study
+    df_res.to_csv('mape.csv')
+    # plot_results()
+
+
 
 if __name__ == '__main__':
     # Selecting indicators that will be used as model variables
 
     # 'AMC', 'WMC', 'DIT', 'NOC', 'RFC', 'CBO', 'Ca', 'Ce', 'CBM', 'IC', 'LCOM', 'LCOM3', 'CAM', 'NPM', 'DAM', 'MOA']
     # 'Security Index', 'blocker_violations', 'critical_violations', 'major_violations', 'minor_violations', 'info_violations']
-    DATASET = ['apache_kafka_measures']
+
+    DATASET = ['data/apache_kafka_measures', 'data/apache_groovy_measures', 'data/apache_incubator_dubbo_measures', 'data/apache_nifi_measures',
+                    'data/apache_ofbiz_measures', 'data/apache_systemml_measures', 'data/commonsio_measures', 'data/google_guava_measures', 'data/igniterealtime_openfire_measures'
+                    , 'data/java_websocket_measures', 'data/jenkinsci_jenkins_measures', 'data/spring-projects_spring-boot_measures'
+                    , 'data/square_okhttp_measures', 'data/square_retrofit_measures', 'data/zxing_zxing_measures']
+
+    # DATASET = ['data/igniterealtime_openfire_measures']
+
 
     WINDOW_SIZE = 2  # choose based on error minimization for different forecasting horizons
     VERSIONS_AHEAD = [1, 5, 10, 20, 40]
 
+    # testing parameters
+    # alpha = df_params[
+    #     (df_params['project'] == 'zxing_zxing_measures') & (df_params['model'] == 'SGDRegression') & (df_params['parameter'] == 'max_iter')][
+    #     'value']
+    # print(alpha)
+
+    # max_iter = df_params[(df_params['project'] == 'apache_kafka_measures') & (df_params['model'] == 'SGDRegression') & (
+    #             df_params['parameter'] == 'max_iter')]['value']
+    # print(max_iter)
+
+    # C = df_params[(df_params['project'] == 'apache_kafka_measures') & (df_params['model'] == 'SVR_rbf') & (
+    #             df_params['parameter'] == 'C')]['value']
+    # print(C)
+
+    # gamma = df_params[(df_params['project'] == 'apache_kafka_measures') & (df_params['model'] == 'SVR_rbf') & (df_params['parameter'] == 'gamma')]['value']
+    # print(gamma)
     main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD)
 
+    plot_results()
