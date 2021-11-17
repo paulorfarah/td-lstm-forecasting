@@ -244,6 +244,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         # Create the regressor model
         name_project = project.replace('data/', '')
         if reg_type == 'LinearRegression':
+            print(project, reg_type)
             # Fitting Multiple Linear Regression to the Training set
             from sklearn.linear_model import LinearRegression
             regressor = LinearRegression()
@@ -251,58 +252,62 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
         if reg_type == 'LassoRegression':
             # Fitting Lasso Regression to the Training set
             from sklearn.linear_model import Lasso
-            alpha =  df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (df_params['parameter'] == 'alpha')]['value']
+            alpha = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (df_params['parameter'] == 'alpha')]['value'].values.tolist()[0]
+            print(project, reg_type, "alpha", int(alpha))
             regressor = Lasso(alpha=int(alpha))
             pipeline = Pipeline([('regressor', regressor)])
         if reg_type == 'RidgeRegression':
             # Fitting Ridge Regression to the Training set
             from sklearn.linear_model import Ridge
             alpha = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
-                        df_params['parameter'] == 'alpha')]['value']
+                        df_params['parameter'] == 'alpha')]['value'].values.tolist()[0]
             # print("alpha"+ str(alpha))
+            print(project, reg_type, "alpha", alpha)
             regressor = Ridge(alpha=int(alpha))
             pipeline = Pipeline([('regressor', regressor)])
         if reg_type == 'SGDRegression':
             # Fitting SGD Regression to the Training set
             from sklearn.linear_model import SGDRegressor
             max_iter = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
-                        df_params['parameter'] == 'max_iter')]['value']
+                        df_params['parameter'] == 'max_iter')]['value'].values.tolist()[0]
 
-            # print(max_iter)
+            print(project, reg_type, "max_iter", max_iter)
             regressor = SGDRegressor(max_iter=int(max_iter), tol=1e-3)
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'SVR_linear':
             # Fitting linear SVR to the dataset
             from sklearn.svm import SVR
             C = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
-                    df_params['parameter'] == 'C')]['value']
+                    df_params['parameter'] == 'C')]['value'].values.tolist()[0]
+            print(project, reg_type, "C", C)
             regressor = SVR(kernel='linear', C=int(C))
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'SVR_rbf':
             # Fitting SVR to the dataset
             from sklearn.svm import SVR
             gamma = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
-                    df_params['parameter'] == 'gamma')]['value']
+                    df_params['parameter'] == 'gamma')]['value'].values.tolist()[0]
             C = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
-                    df_params['parameter'] == 'C')]['value']
+                    df_params['parameter'] == 'C')]['value'].values.tolist()[0]
             # print("C = df_params[(df_params['project'] == " + name_project + ") & (df_params['model'] == " + reg_type + ") & (df_params['parameter'] == 'C')]['value']")
+            print(project, reg_type, " gamma: ", gamma, " C: ", C)
             regressor = SVR(kernel='rbf', gamma=float(gamma), C=int(C))
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'RandomForestRegressor':
             # Fitting Random Forest Regression to the dataset
             from sklearn.ensemble import RandomForestRegressor
             n_estimators = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
-                    df_params['parameter'] == 'n_estimators')]['value']
+                    df_params['parameter'] == 'n_estimators')]['value'].values.tolist()[0]
             random_state = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
-                    df_params['parameter'] == 'random_state')]['value']
+                    df_params['parameter'] == 'random_state')]['value'].values.tolist()[0]
             max_depth = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
                     df_params['parameter'] == 'max_depth')]['value']
-            # print("n_est: " + n_estimators)
-            # print("max_d: ")
-            # print(max_depth)
+            print(project, reg_type, " n_estimators: ", n_estimators)
             if max_depth.empty:
                 regressor = RandomForestRegressor(n_estimators=int(n_estimators), random_state=0)
             else:
+                max_depth = df_params[(df_params['project'] == name_project) & (df_params['model'] == reg_type) & (
+                        df_params['parameter'] == 'max_depth')]['value'].values.tolist()[0]
                 regressor = RandomForestRegressor(n_estimators=int(n_estimators), random_state=0, max_depth=int(max_depth))
             pipeline = Pipeline([('regressor', regressor)])
         elif reg_type == 'ANN':
@@ -325,6 +330,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD):
 
         if project in list_split4:
             n_splits = 4
+        print("splits=" + str(n_splits))
         tscv = TimeSeriesSplit(n_splits=n_splits)
 
         from sklearn.metrics import make_scorer
@@ -439,9 +445,19 @@ def read_refactoring_dataset():
         print(sys.exc_info())
 
 def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, project_list):
-    df_res = pd.DataFrame(columns=['Model', 'Horizon', 'apache_groovy', 'apache_incubator_dubbo', 'apache_kafka', 'apache_nifi', 'apache_ofbiz', 'apache_systemml',
+    df_mae = pd.DataFrame(columns=['Model', 'Horizon', 'apache_groovy', 'apache_incubator_dubbo', 'apache_kafka', 'apache_nifi', 'apache_ofbiz', 'apache_systemml',
                           'commonsio', 'google_guava', 'igniterealtime_openfire', 'java_websocket', 'jenkinsci_jenkins',
                           'spring-projects_spring-boot', 'square_okhttp', 'square_retrofit', 'zxing_zxing'])
+    df_rmse = pd.DataFrame(
+        columns=['Model', 'Horizon', 'apache_groovy', 'apache_incubator_dubbo', 'apache_kafka', 'apache_nifi',
+                 'apache_ofbiz', 'apache_systemml',
+                 'commonsio', 'google_guava', 'igniterealtime_openfire', 'java_websocket', 'jenkinsci_jenkins',
+                 'spring-projects_spring-boot', 'square_okhttp', 'square_retrofit', 'zxing_zxing'])
+    df_mape = pd.DataFrame(
+        columns=['Model', 'Horizon', 'apache_groovy', 'apache_incubator_dubbo', 'apache_kafka', 'apache_nifi',
+                 'apache_ofbiz', 'apache_systemml',
+                 'commonsio', 'google_guava', 'igniterealtime_openfire', 'java_websocket', 'jenkinsci_jenkins',
+                 'spring-projects_spring-boot', 'square_okhttp', 'square_retrofit', 'zxing_zxing'])
 
     for project in project_list:
         # print('**************** %s ****************' % project)
@@ -467,19 +483,36 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
 
                 print('%d: %0.3f;%0.3f;%0.3f;%0.3f' % (versions_ahead, abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
                 project_name = project.replace('data/', '').replace('_measures', '')
-                filterinDataframe = df_res[(df_res['Model'] == reg_type) & (df_res['Horizon'] == versions_ahead)]
-                if not filterinDataframe.empty:
-                    df_res.loc[(df_res['Model'] == reg_type) & (df_res['Horizon'] == versions_ahead), project_name] = abs(mape_mean)
 
+                filterinDataframe_mae = df_mae[(df_mae['Model'] == reg_type) & (df_mae['Horizon'] == versions_ahead)]
+                filterinDataframe_rmse = df_rmse[(df_rmse['Model'] == reg_type) & (df_rmse['Horizon'] == versions_ahead)]
+                filterinDataframe_mape = df_mape[(df_mape['Model'] == reg_type) & (df_mape['Horizon'] == versions_ahead)]
+                if not filterinDataframe_mae.empty:
+                    df_mae.loc[(df_mae['Model'] == reg_type) & (df_mae['Horizon'] == versions_ahead), project_name] = abs(mae_mean)
+                else:
+                    res = {'Model': reg_type, 'Horizon': versions_ahead, project_name: abs(mae_mean)}
+                    df_mae.loc[len(df_mae)] = res
+                if not filterinDataframe_rmse.empty:
+                    df_rmse.loc[(df_rmse['Model'] == reg_type) & (df_rmse['Horizon'] == versions_ahead), project_name] = abs(rmse_mean)
+                else:
+                    res = {'Model': reg_type, 'Horizon': versions_ahead, project_name: abs(rmse_mean)}
+                    df_rmse.loc[len(df_rmse)] = res
+                if not filterinDataframe_mape.empty:
+                    df_mape.loc[(df_mape['Model'] == reg_type) & (df_mape['Horizon'] == versions_ahead), project_name] = abs(mape_mean)
                 else:
                     res = {'Model': reg_type, 'Horizon': versions_ahead, project_name: abs(mape_mean)}
-                    df_res.loc[len(df_res)] = res
+                    df_mape.loc[len(df_mape)] = res
 
-    df_res['mean'] = df_res.iloc[:, 2:17].mean(axis=1)
+    df_mae['mean'] = df_mae.iloc[:, 2:17].mean(axis=1)
+    df_rmse['mean'] = df_rmse.iloc[:, 2:17].mean(axis=1)
+    df_mape['mean'] = df_mape.iloc[:, 2:17].mean(axis=1)
+    # print(df_mape)
 
-    original_study = [3.47, 1.39, 1.44, 3.19, 6.97, 2.04, 5.18, 8.62, 4.11, 3.91, 7.45, 12.92, 6.76, 5.94, 18.39, 9.24, 8.34, 15.80, 17.01, 15.03, 8.00, 18.65, 10.57, 10.66, 15.56, 21.93, 14.01, 7.38, 10.56, 8.61, 9.34, 8.98, 11.18, 8.31, 5.94]
-    df_res['original_study'] = original_study
-    df_res.to_csv('mape.csv')
+    mape_original_study = [3.47, 8.62, 18.39, 18.65, 10.56, 1.39, 4.11, 9.24, 10.57, 8.61, 1.44, 3.91, 8.34, 10.66, 9.34, 3.19, 7.45, 15.80, 15.56, 8.98, 6.97, 12.92, 17.01, 21.93, 11.18, 2.04, 6.76, 15.03, 14.01, 8.31, 5.18, 5.94, 8.00, 7.38, 5.94]
+    df_mape['original_study'] = mape_original_study
+    df_mae.to_csv('mae.csv')
+    df_rmse.to_csv('rmse.csv')
+    df_mape.to_csv('mape.csv')
     # plot_results()
 
 
@@ -519,4 +552,4 @@ if __name__ == '__main__':
     # print(gamma)
     main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD)
 
-    plot_results()
+    # plot_results()

@@ -52,8 +52,8 @@ spring-projects_spring-boot_measures,RandomForestRegressor,n_estimators,100
 spring-projects_spring-boot_measures,RandomForestRegressor,max_depth,5
 spring-projects_spring-boot_measures,RandomForestRegressor,random_state,0
 igniterealtime_openfire_measures,LinearRegression,,
-igniterealtime_openfire_measures,LassoRegression,alpha,100
-igniterealtime_openfire_measures,RidgeRegression,alpha,1000
+igniterealtime_openfire_measures,LassoRegression,alpha,1000
+igniterealtime_openfire_measures,RidgeRegression,alpha,10000
 igniterealtime_openfire_measures,SGDRegression,max_iter,1000
 igniterealtime_openfire_measures,SGDRegression,tol,1.00E-03
 igniterealtime_openfire_measures,SVR_linear,kernel,linear
