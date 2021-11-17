@@ -168,23 +168,23 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
                 model.add(Dense(1, kernel_initializer='normal'))
                 model.compile(loss='mean_squared_error', optimizer=opt)
                 return model    
-        def lstm_model3(optimizer='adam', activation="relu", neurons = 150,learn_rate = 0.001, dropout_rate=0.1, layers = 2):
+        def lstm_model3(optimizer='adam', activation="relu", neurons = 150,learn_rate = 0.01, dropout_rate=0.1, layers = 2):
             # LSTM layer expects inputs to have shape of (batch_size, timesteps, input_dim).
             # In keras you need to pass (timesteps, input_dim) for input_shape argument.
             K.clear_session()
             opt = optimizers.Adam(learning_rate=learn_rate)
             if layers == 1:
                 model = Sequential()
-                model.add(LSTM(neurons, input_shape=(3, 3), kernel_initializer='normal', activation=activation))
+                model.add(LSTM(neurons, input_shape=(9, 1), kernel_initializer='normal', activation=activation))
                 model.add(Dropout(dropout_rate))
                 model.add(Dense(1, kernel_initializer='normal'))
                 model.compile(loss='mean_squared_error', optimizer=opt)
                 return model
             else:
                 model = Sequential()
-                model.add(LSTM(neurons, input_shape=(3, 3), return_sequences=True, kernel_initializer='normal', activation=activation))
+                model.add(LSTM(neurons, input_shape=(9, 1), return_sequences=True, kernel_initializer='normal', activation=activation))
                 model.add(Dropout(dropout_rate))
-                model.add(LSTM(neurons, input_shape=(3, 3), return_sequences=False, kernel_initializer='normal', activation=activation))
+                model.add(LSTM(neurons, input_shape=(9, 1), return_sequences=False, kernel_initializer='normal', activation=activation))
                 model.add(Dense(1, kernel_initializer='normal'))
                 model.compile(loss='mean_squared_error', optimizer=opt)
                 return model
@@ -237,12 +237,12 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
             if config == 2:
                 regressor = KerasRegressor(build_fn=lstm_model2, epochs=2000, batch_size=15, verbose=False)
             if config == 3:
-               regressor = KerasRegressor(build_fn=lstm_model3, epochs=1500, batch_size=15, verbose=False)
+               regressor = KerasRegressor(build_fn=lstm_model3, epochs=500, batch_size=10, verbose=False)
             # pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
             pipeline = Pipeline([('regressor', regressor)])
 
         from sklearn.model_selection import TimeSeriesSplit
-        tscv = TimeSeriesSplit(n_splits=5)
+        tscv = TimeSeriesSplit(n_splits=4)
 
         from sklearn.metrics import make_scorer
         def mean_absolute_percentage_error(y_true, y_pred):
@@ -259,11 +259,11 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
                                                                 greater_is_better=False),
                   'root_mean_squared_error': make_scorer(root_mean_squared_error, greater_is_better=False)}
 
-        #if reg_type == 'LSTM':
+        if reg_type == 'LSTM':
             # reshape from [samples, timesteps] into [samples, timesteps, features]
-        #    n_features = 1
-        #    X = X.reshape((X.shape[0], X.shape[1], n_features))
-
+            n_features = 1
+            X = X.reshape((X.shape[0], X.shape[1], n_features))
+            
         #scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False)
        
         scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(),n_jobs=15, scoring=scorer, cv=tscv, return_train_score=False)
@@ -298,29 +298,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
             # Remove total_cost from indpependent variables set
             #drop pra nao alienar o algoritmo (creio eu)
             data = data.drop(columns=['var4(t-2)', 'var4(t-1)', 'var4(t)'])
-
-            #### ADAPTACAO MELO ESTRUTURA RECORRENTE ####
-
-            #para transformar na representação do melo é preciso splitar as linhas 
-            # em colunas baseado no tamanho da janela e no número de variaveis
-            timeseries_list = list()
-            timeseries_labels = list()
-            for i in range(0,data.shape[0]):
-                window = list()
-                for j in range(0,data.shape[1]-1,3):
-                     window.append(data.iloc[i,j:j+3 ].values.astype(np.float64))
-                timeseries_list.append(window)
-                timeseries_labels.append(data.iloc[i, data.shape[1]-1])
-            
-            timeseries_tensor = np.array(timeseries_list)
-
-            timeseries_tensor = timeseries_tensor.transpose((0,2,1))
-            
-            timeseries_labels = np.array(timeseries_labels).astype(np.float64)
-            timeseries_labels = timeseries_labels.reshape(-1, 1)
-
-            #### FIM ADAPTACAO MELO ESTRUTURA RECORRENTE ####
-            
+ 
 
             # Set X, Y
             X = data.iloc[:, data.columns != 'forecasted_total_principal'].values
@@ -328,11 +306,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
             Y = data.forecasted_total_principal.values
             #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
             for reg_type in ['LSTM']:
-                if(reg_type == 'LSTM'):
-                    #regressor = create_regressor(reg_type, X, Y, project, versions_ahead, config)
-                    regressor = create_regressor(reg_type, timeseries_tensor, timeseries_labels, project, versions_ahead, config)
-                else:
-                    regressor = create_regressor(reg_type, X, Y, project, versions_ahead, config)
+                regressor = create_regressor(reg_type, X, Y, project, versions_ahead, config)
 
     print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET, EXP, config)
 
@@ -375,7 +349,7 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
         #print(results[project][versions_ahead][reg_type])
         #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
        
-        filename = 'results/' + project+ '-test-melo.csv'
+        filename = 'results/lstm-new.csv'
 
         for reg_type in ['LSTM']:
             print('*************** %s **************' % reg_type)
@@ -428,10 +402,10 @@ if __name__ == '__main__':
 
     # 'AMC', 'WMC', 'DIT', 'NOC', 'RFC', 'CBO', 'Ca', 'Ce', 'CBM', 'IC', 'LCOM', 'LCOM3', 'CAM', 'NPM', 'DAM', 'MOA']
     # 'Security Index', 'blocker_violations', 'critical_violations', 'major_violations', 'minor_violations', 'info_violations']
-    DATASET = [#'_benchmark_repository_measures',
+    DATASETCOMPLETE = [#'_benchmark_repository_measures',
                 'apache_groovy_measures',
                 'apache_incubator_dubbo_measures',
-               'apache_kafka_measures',
+                'apache_kafka_measures',
                 'apache_nifi_measures',
                 'apache_ofbiz_measures',
                 'apache_systemml_measures',
@@ -447,6 +421,9 @@ if __name__ == '__main__':
                 'square_retrofit_measures',
                 'zxing_zxing_measures'
                  ]
+    DATASET = ['apache_ofbiz_measures', 'apache_nifi_measures', 'apache_incubator_dubbo_measures',
+                       'square_retrofit_measures', 'spring-projects_spring-boot_measures', 'java_websocket_measures',
+                       'zxing_zxing_measures', 'igniterealtime_openfire_measures']
                 
 
     WINDOW_SIZE = 2  # choose based on error minimization for different forecasting horizons
@@ -454,7 +431,8 @@ if __name__ == '__main__':
     CONFIGS = 3
     VERSIONS_AHEAD = [1, 5, 10, 20, 40]
     #VERSIONS_AHEAD = [1]
-    for config in range(1,CONFIGS+1):
-     for exp in range(1,EXPERIMENTS+1): 
-        main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,exp,config)
+    main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,1,3)
+    #for config in range(1,CONFIGS+1):
+    # for exp in range(1,EXPERIMENTS+1): 
+        #main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,exp,config)
 
