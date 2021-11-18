@@ -90,7 +90,7 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
     return agg
 
 
-def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
+def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP):
 
     METRIC_KEYS_SDK4ED = ['bugs', 'duplicated_blocks', 'code_smells',
                           # 'comment_lines', 'ncloc', 'uncovered_lines', 'vulnerabilities', 'complexity',
@@ -98,7 +98,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
     results = {}
     results['_info'] = {'metrics': METRIC_KEYS_SDK4ED, 'window_size': WINDOW_SIZE, 'versions_ahead': VERSIONS_AHEAD}
 
-    def create_regressor(reg_type, X, Y, project, versions_ahead, config):
+    def create_regressor(reg_type, X, Y, project, versions_ahead):
         # Splitting the dataset into the Training set and Test set
         #     from sklearn.model_selection import train_test_split
         #     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.2, random_state = 0, shuffle = False)
@@ -108,18 +108,17 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
         scaler = StandardScaler()
         #custom parameters for lstm
         batch_size = [5,10,15]
-        epochs = [100,500,1000]
+        epochs = [100,500,1000,1500]
         optimizer = ['adam']
         learn_rate = [0.01, 0.1, 0.2]
         momentum = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9]
         init_mode = ['uniform', 'lecun_uniform', 'normal', 'zero', 'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform']
         #activation = ['softmax', 'softplus', 'softsign', 'relu', 'tanh', 'sigmoid', 'hard_sigmoid', 'linear']
-        activation = ['relu']
+        activation = ['relu', 'tanh', 'sigmoid']
         weight_constraint = [1, 2, 3, 4, 5]
         dropout_rate = [0.1,0.2,0.25]
         neurons = [10,50,100,150,200]
         layers = [1,2]
-        config = [1,2,3]
 
         #param_grid = dict(optimizer = optimizer)
         param_grid = {
@@ -152,16 +151,16 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
             opt = optimizers.Adam(learning_rate=learn_rate)
             if layers == 1:
                 model = Sequential()
-                model.add(LSTM(neurons, input_shape=(3, 3), kernel_initializer='normal', activation=activation))
+                model.add(LSTM(neurons, input_shape=(9, 1), kernel_initializer='normal', activation=activation))
                 model.add(Dropout(dropout_rate))
                 model.add(Dense(1, kernel_initializer='normal'))
                 model.compile(loss='mean_squared_error', optimizer=opt)
                 return model
             else:
                 model = Sequential()
-                model.add(LSTM(neurons, input_shape=(3, 3), return_sequences=True, kernel_initializer='normal', activation=activation))
+                model.add(LSTM(neurons, input_shape=(9, 1), return_sequences=True, kernel_initializer='normal', activation=activation))
                 model.add(Dropout(dropout_rate))
-                model.add(LSTM(neurons, input_shape=(3, 3), return_sequences=False, kernel_initializer='normal', activation=activation))
+                model.add(LSTM(neurons, input_shape=(9, 1), return_sequences=False, kernel_initializer='normal', activation=activation))
                 model.add(Dense(1, kernel_initializer='normal'))
                 model.compile(loss='mean_squared_error', optimizer=opt)
                 return model
@@ -210,7 +209,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'LSTM':
             from keras.wrappers.scikit_learn import KerasRegressor
-            regressor = KerasRegressor(build_fn=lstm_model, epochs=1000, batch_size=5, verbose=False)
+            regressor = KerasRegressor(build_fn=lstm_model,verbose=False)
             # pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
             pipeline = Pipeline([('regressor', regressor)])
 
@@ -232,16 +231,14 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
                                                                 greater_is_better=False),
                   'root_mean_squared_error': make_scorer(root_mean_squared_error, greater_is_better=False)}
 
-        #if reg_type == 'LSTM':
+        if reg_type == 'LSTM':
             # reshape from [samples, timesteps] into [samples, timesteps, features]
-        #    n_features = 1
-        #    X = X.reshape((X.shape[0], X.shape[1], n_features))
-
+            n_features = 1
+            X = X.reshape((X.shape[0], X.shape[1], n_features))
         #scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False)
-    
         search = GridSearchCV(estimator=pipeline, param_grid=param_grid, n_jobs=-1,refit='mean_absolute_percentage_error' , cv=tscv, scoring=scorer, return_train_score=False)
         print("fiting....")
-        search.fit(X=X, y=Y.ravel())
+        search.fit(X=X, y=Y.ravel())    
 
        # print("Best parameter (CV score=%0.3f):")
         #print(search)
@@ -262,7 +259,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
         # Initialize results dict object
         results[project] = {}
         for versions_ahead in VERSIONS_AHEAD:
-            print("Version ahead " +  str(versions_ahead))
+            print("Version ahead " +  str(versions_ahead) + " " + project)
             # Initialize results dict object
             results[project][versions_ahead] = {}
 
@@ -282,29 +279,8 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
             # Remove total_cost from indpependent variables set
             #drop pra nao alienar o algoritmo (creio eu)
             data = data.drop(columns=['var4(t-2)', 'var4(t-1)', 'var4(t)'])
-
-            #### ADAPTACAO MELO ESTRUTURA RECORRENTE ####
-
-            #para transformar na representação do melo é preciso splitar as linhas 
-            # em colunas baseado no tamanho da janela e no número de variaveis
-            timeseries_list = list()
-            timeseries_labels = list()
-            for i in range(0,data.shape[0]):
-                window = list()
-                for j in range(0,data.shape[1]-1,3):
-                     window.append(data.iloc[i,j:j+3 ].values.astype(np.float64))
-                timeseries_list.append(window)
-                timeseries_labels.append(data.iloc[i, data.shape[1]-1])
             
-            timeseries_tensor = np.array(timeseries_list)
-
-            timeseries_tensor = timeseries_tensor.transpose((0,2,1))
-            
-            timeseries_labels = np.array(timeseries_labels).astype(np.float64)
-            timeseries_labels = timeseries_labels.reshape(-1, 1)
-
-            #### FIM ADAPTACAO MELO ESTRUTURA RECORRENTE ####
-            
+          
 
             # Set X, Y
             X = data.iloc[:, data.columns != 'forecasted_total_principal'].values
@@ -313,11 +289,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
             #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
             #teste com estrutura do melo
             for reg_type in ['LSTM']:
-                if(reg_type == 'LSTM'):
-                    regressor = create_regressor(reg_type, timeseries_tensor, timeseries_labels, project, versions_ahead, config)
-                    #regressor = create_regressor(reg_type, timeseries_tensor, timeseries_labels, project, versions_ahead)
-                else:
-                    regressor = create_regressor(reg_type, X, Y, project, versions_ahead, config)
+                regressor = create_regressor(reg_type, X, Y, project, versions_ahead)
 
     print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET, EXP)
 
@@ -360,7 +332,7 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
         #print(results[project][versions_ahead][reg_type])
         #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
        
-        filename = 'results/' + project + '-roundMelo' + '.csv'
+        filename = 'results/' + project + '-modelsearch' + '.csv'
 
         for reg_type in ['LSTM']:
             print('*************** %s **************' % reg_type)
@@ -368,6 +340,14 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
             for i,conf in enumerate(configs):
                 print(str(i),configs[i],"x","x",sep=';')
             #iterar sob o total de configuraçoes geradas
+                average_mae = 0
+                average_rmse = 0
+                average_mape = 0
+                average_r2_mean2 = 0
+                average_mean_fit_time2 = 0
+                average_std_fit_time2 = 0
+                average_mean_score_time2 = 0
+                average_std_score_time2 = 0
                 for versions_ahead in VERSIONS_AHEAD:
                     # Print scores
                     mae_mean = results[project][versions_ahead][reg_type]['mean_test_neg_mean_absolute_error']
@@ -394,53 +374,77 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
                     rmse_mean2 = rmse_mean.tolist()
                     mape_mean2 = mape_mean.tolist()
                     r2_mean2 = r2_mean.tolist()
-                    config = str(versions_ahead) + "-" + str(configs[i])
                     # Exp;dataset,config;mean_fit_time;std_fit_time;mean_score_time;TempoExecution;mae_mean;rmse_mean;mape_mean;r2_mean 
                     line = []
                     line.append(EXP)
                     line.append(project)
-                    line.append(config)
+                    #horizon
+                    line.append(str(versions_ahead))
+                    #config
+                    line.append(str(configs[i]))
                     line.append(mean_fit_time2[i])
                     line.append(std_fit_time2[i])
                     line.append(mean_score_time2[i])
                     line.append(std_score_time2[i])
+                    average_mean_fit_time2 += mean_fit_time2[i]
+                    average_std_fit_time2 += std_fit_time2[i]
+                    average_mean_score_time2 += mean_score_time2[i]
+                    average_std_score_time2 += std_score_time2[i]
                     line.append(abs(mae_mean2[i]))
+                    average_mae += abs(mae_mean2[i])
                     line.append(abs(rmse_mean2[i]))
+                    average_rmse += abs(rmse_mean2[i])
                     line.append(abs(mape_mean2[i]))
+                    average_mape += abs(mape_mean2[i])
                     line.append(r2_mean2[i])
+                    average_r2_mean2 += r2_mean2[i]
                     with open(filename, 'a+') as f_object:
                         writer_object = writer(f_object,delimiter=";")
                         writer_object.writerow(line)
                         f_object.close()
 
-                    print(abs(mae_mean2[i]),abs(rmse_mean2[i]),abs(mape_mean2[i]),r2_mean2[i],sep=';')                   
+                    #print(abs(mae_mean2[i]),abs(rmse_mean2[i]),abs(mape_mean2[i]),r2_mean2[i],sep=';')                   
                     #print('%0.3f,%0.3f,%0.3f,%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
-
+                line = []
+                line.append(EXP)
+                line.append(project)
+                #horizon
+                line.append("average")
+                #config
+                line.append(str(configs[i]))
+                line.append(average_mean_fit_time2/5)
+                line.append(average_std_fit_time2/5)
+                line.append(average_mean_score_time2/5)
+                line.append(average_std_score_time2/5)
+                line.append(average_mae/5)
+                line.append(average_rmse/5)
+                line.append(average_mape/5)
+                line.append(average_r2_mean2/5)
+                with open(filename, 'a+') as f_object:
+                    writer_object = writer(f_object,delimiter=";")
+                    writer_object.writerow(line)
+                    f_object.close()
 
 if __name__ == '__main__':
     # Selecting indicators that will be used as model variables
 
     # 'AMC', 'WMC', 'DIT', 'NOC', 'RFC', 'CBO', 'Ca', 'Ce', 'CBM', 'IC', 'LCOM', 'LCOM3', 'CAM', 'NPM', 'DAM', 'MOA']
     # 'Security Index', 'blocker_violations', 'critical_violations', 'major_violations', 'minor_violations', 'info_violations']
-    DATASET = [#'_benchmark_repository_measures',
-               # 'apache_groovy_measures',
-               # 'apache_incubator_dubbo_measures',
-               'apache_kafka_measures'
-               # 'apache_nifi_measures',
-               # 'apache_ofbiz_measures',
-               # 'apache_systemml_measures',
-               # 'commonsio_measures',
-               # 'company_projectA_measures',
-               # 'company_projectB_measures',
-               # 'google_guava_measures',
-               # 'igniterealtime_openfire_measures',
-                #'java_websocket_measures',
-               # 'jenkinsci_jenkins_measures',
-               # 'spring-projects_spring-boot_measures',
-                #'square_okhttp_measures',
-                #'square_retrofit_measures',
-                #'zxing_zxing_measures'
-                 ]
+    DATASET_5_SPLIT = [
+               'apache_kafka_measures',
+               'apache_groovy_measures',
+               'apache_systemml_measures',
+               'commonsio_measures',
+               'company_projectA_measures',
+               'company_projectB_measures',
+               'google_guava_measures',
+               'jenkinsci_jenkins_measures',
+               'square_okhttp_measures',
+                ]
+    DATASET_4_split = ['apache_ofbiz_measures', 'apache_nifi_measures', 'apache_incubator_dubbo_measures',
+                       'square_retrofit_measures', 'spring-projects_spring-boot_measures', 'java_websocket_measures',
+                       'zxing_zxing_measures', 'igniterealtime_openfire_measures']
+        
                 
 
     WINDOW_SIZE = 2  # choose based on error minimization for different forecasting horizons
@@ -448,5 +452,8 @@ if __name__ == '__main__':
     CONFIGS = 3
     VERSIONS_AHEAD = [1, 5, 10, 20, 40]
     #VERSIONS_AHEAD = [1,5]
-    main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,1,1)
+    #main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,1,1)
+    #for config in range(1,CONFIGS+1):
+    for exp in range(1,EXPERIMENTS+1): 
+        main(DATASET_5_SPLIT, WINDOW_SIZE, VERSIONS_AHEAD,exp)
 
