@@ -114,7 +114,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP):
         #momentum = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9]
         init_mode = ['uniform', 'lecun_uniform', 'normal', 'zero', 'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform']
         #activation = ['softmax', 'softplus', 'softsign', 'relu', 'tanh', 'sigmoid', 'hard_sigmoid', 'linear']
-        activation = ['relu', 'tanh', 'sigmoid']
+        activation = ['tanh', 'sigmoid']
         weight_constraint = [1, 2, 3, 4, 5]
         dropout_rate = [0.1,0.2,0.25]
         neurons = [10,50,100,150,200]
@@ -237,12 +237,13 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP):
             X = X.reshape((X.shape[0], X.shape[1], n_features))
            
         #scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False)
-        search = GridSearchCV(error_score=0,estimator=pipeline, param_grid=param_grid, n_jobs=-1,refit='mean_absolute_percentage_error' , cv=tscv, scoring=scorer, return_train_score=False)
+        search = GridSearchCV(estimator=pipeline, param_grid=param_grid, n_jobs=-1,refit='mean_absolute_percentage_error' , cv=tscv, scoring=scorer, return_train_score=False)
         print("fiting....")
-        ar_inf = np.where(np.isinf(X))
+        ar_inf = np.argwhere(np.isinf(X))
         print(ar_inf)
-        ar_nan = np.where(np.isnan(X))
+        ar_nan = np.argwhere(np.isnan(X))
         print (ar_nan)
+        print(np.argwhere(Y < 0))
         search.fit(X=X, y=Y.ravel())    
 
        # print("Best parameter (CV score=%0.3f):")
