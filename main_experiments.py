@@ -123,7 +123,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
             model = Sequential()
             model.add(Dense(10, input_shape=(10,), input_dim=10, kernel_initializer='normal', activation='relu'))
             model.add(Dense(1, kernel_initializer='normal'))
-            # Compile model
+            # Compile modelƒa
             model.compile(loss='mean_squared_error', optimizer='adam')
             return model
 
