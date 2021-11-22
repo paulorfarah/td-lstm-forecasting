@@ -97,7 +97,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,config):
         momentum = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9]
         init_mode = ['uniform', 'lecun_uniform', 'normal', 'zero', 'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform']
         #activation = ['softmax', 'softplus', 'softsign', 'relu', 'tanh', 'sigmoid', 'hard_sigmoid', 'linear']
-        activation = ['relu']
+        activation = ['relu', 'tanh', 'sigmoid',]
         weight_constraint = [1, 2, 3, 4, 5]
         dropout_rate = [0.1,0.2,0.25]
         neurons = [10,50,100,150,200]
