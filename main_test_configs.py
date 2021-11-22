@@ -14,6 +14,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import GridSearchCV
 from tensorflow.keras import optimizers
+import itertools
 #import csv
 from csv import writer
 
@@ -90,7 +91,7 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
     return agg
 
 
-def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP):
+def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,comb):
 
     METRIC_KEYS_SDK4ED = ['bugs', 'duplicated_blocks', 'code_smells',
                           # 'comment_lines', 'ncloc', 'uncovered_lines', 'vulnerabilities', 'complexity',
@@ -106,33 +107,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP):
         from sklearn.pipeline import Pipeline
         from sklearn.preprocessing import StandardScaler
         scaler = StandardScaler()
-        #custom parameters for lstm
-        batch_size = [5,10,15]
-        epochs = [100,500,1000,1500]
-        optimizer = ['adam']
-        learn_rate = [0.01,0.1,0.2]
-        #momentum = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9]
-        init_mode = ['uniform', 'lecun_uniform', 'normal', 'zero', 'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform']
-        #activation = ['softmax', 'softplus', 'softsign', 'relu', 'tanh', 'sigmoid', 'hard_sigmoid', 'linear']
-        activation = ['tanh', 'sigmoid']
-        weight_constraint = [1, 2, 3, 4, 5]
-        dropout_rate = [0.1,0.2,0.25]
-        neurons = [10,50,100,150,200]
-        layers = [1,2]
-
-        #param_grid = dict(optimizer = optimizer)
-        param_grid = {
-                        'regressor__optimizer': optimizer,
-                        'regressor__neurons': neurons,
-                        'regressor__batch_size': batch_size,
-                        'regressor__epochs': epochs,
-                        'regressor__dropout_rate': dropout_rate,
-                        'regressor__activation': activation,
-                        'regressor__layers': layers,
-                        'regressor__learn_rate': learn_rate,
-                     }
-      
-
+     
         # define base model
         def baseline_model():
             # create model
@@ -209,7 +184,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP):
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'LSTM':
             from keras.wrappers.scikit_learn import KerasRegressor
-            regressor = KerasRegressor(build_fn=lstm_model,verbose=False)
+            regressor = KerasRegressor(build_fn=lstm_model,batch_size=comb[0],epochs=comb[1],verbose=False)
             # pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
             pipeline = Pipeline([('regressor', regressor)])
 
@@ -236,29 +211,13 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP):
             n_features = 1
             X = X.reshape((X.shape[0], X.shape[1], n_features))
            
-        #scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False)
-        search = GridSearchCV(estimator=pipeline, param_grid=param_grid, n_jobs=-1,refit='mean_absolute_percentage_error' , cv=tscv, scoring=scorer, return_train_score=False)
-        print("fiting....")
-        ar_inf = np.argwhere(np.isinf(X))
-        print(ar_inf)
-        ar_nan = np.argwhere(np.isnan(X))
-        print (ar_nan)
-        print(np.argwhere(Y < 0))
-        search.fit(X=X, y=Y.ravel())    
+        scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False)
+        
 
-       # print("Best parameter (CV score=%0.3f):")
-        #print(search)
-        #search.scorer_.items
-       # for key, value in  search.scorer_.items():
-       #     print(key, value)
-       #     scores[key] = value.tolist()
-        results[project][versions_ahead][reg_type] = {}
-        #print("############## ######## #####")
-        for key in search.cv_results_.keys():
-            #print(key)
-            #print(search.cv_results_[key])
-            results[project][versions_ahead][reg_type][key] = {}
-            results[project][versions_ahead][reg_type][key] = search.cv_results_[key]
+        # Fill results dict object
+        for key, value in scores.items():
+            scores[key] = value.tolist()
+        results[project][versions_ahead][reg_type] = scores
   
    # For every project in dataset
     for project in DATASET:
@@ -297,7 +256,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP):
             for reg_type in ['LSTM']:
                 regressor = create_regressor(reg_type, X, Y, project, versions_ahead)
 
-    print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET, EXP)
+    print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET, EXP,comb)
 
 
 def read_dataset(VERSIONS_AHEAD, WINDOW_SIZE):
@@ -332,104 +291,95 @@ def append_new_line(file_name, row):
         writer_object.writerow(row)
         f_object.close()
 
-def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET, EXP):
+def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET, EXP,comb):
     for project in DATASET:
         print('**************** %s ****************' % project)
         #print(results[project][versions_ahead][reg_type])
         #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
        
-        filename = 'results/' + project + '-modelsearch' + '.csv'
+        filename = 'results/' + project + '-model-find' + '.csv'
 
         for reg_type in ['LSTM']:
             print('*************** %s **************' % reg_type)
-            configs =  results[project][1][reg_type]['params']
-            for i,conf in enumerate(configs):
-                print(str(i),configs[i],"x","x",sep=';')
-            #iterar sob o total de configuraçoes geradas
-                average_mae = 0
-                average_rmse = 0
-                average_mape = 0
-                average_r2_mean2 = 0
-                average_mean_fit_time2 = 0
-                average_std_fit_time2 = 0
-                average_mean_score_time2 = 0
-                average_std_score_time2 = 0
-                for versions_ahead in VERSIONS_AHEAD:
-                    # Print scores
-                    mae_mean = results[project][versions_ahead][reg_type]['mean_test_neg_mean_absolute_error']
-                    #mae_std = results[project][versions_ahead][reg_type]['std_test_neg_mean_absolute_error']
-                    #mse_mean = results[project][versions_ahead][reg_type]['mean_test_neg_mean_squared_error']
-                    #mse_std = results[project][versions_ahead][reg_type]['std_test_neg_mean_squared_error']
-                    mape_mean = results[project][versions_ahead][reg_type]['mean_test_mean_absolute_percentage_error']
-                    #mape_std = results[project][versions_ahead][reg_type]['std_test_mean_absolute_percentage_error']
-                    r2_mean = results[project][versions_ahead][reg_type]['mean_test_r2']
-                    #r2_std = results[project][versions_ahead][reg_type]['std_test_r2']
-                    rmse_mean = results[project][versions_ahead][reg_type]['mean_test_root_mean_squared_error']
-                    #rmse_std = results[project][versions_ahead][reg_type]['std_test_root_mean_squared_error']
-                    params =  results[project][versions_ahead][reg_type]['params']
-                    mean_fit_time = results[project][versions_ahead][reg_type]['mean_fit_time']
-                    std_fit_time = results[project][versions_ahead][reg_type]['std_fit_time']
-                    mean_score_time = results[project][versions_ahead][reg_type]['mean_score_time']
-                    std_score_time = results[project][versions_ahead][reg_type]['std_score_time']
-                    # test_set_r2 = results[project][versions_ahead][reg_type]['test_set_r2']
-                    mean_fit_time2 = mean_fit_time.tolist()
-                    std_fit_time2 = std_fit_time.tolist()
-                    mean_score_time2 = mean_score_time.tolist()
-                    std_score_time2 = std_score_time.tolist()
-                    mae_mean2 = mae_mean.tolist()
-                    rmse_mean2 = rmse_mean.tolist()
-                    mape_mean2 = mape_mean.tolist()
-                    r2_mean2 = r2_mean.tolist()
-                    # Exp;dataset,config;mean_fit_time;std_fit_time;mean_score_time;TempoExecution;mae_mean;rmse_mean;mape_mean;r2_mean 
-                    line = []
-                    line.append(EXP)
-                    line.append(project)
-                    #horizon
-                    line.append(str(versions_ahead))
-                    #config
-                    line.append(str(configs[i]))
-                    line.append(mean_fit_time2[i])
-                    line.append(std_fit_time2[i])
-                    line.append(mean_score_time2[i])
-                    line.append(std_score_time2[i])
-                    average_mean_fit_time2 += mean_fit_time2[i]
-                    average_std_fit_time2 += std_fit_time2[i]
-                    average_mean_score_time2 += mean_score_time2[i]
-                    average_std_score_time2 += std_score_time2[i]
-                    line.append(abs(mae_mean2[i]))
-                    average_mae += abs(mae_mean2[i])
-                    line.append(abs(rmse_mean2[i]))
-                    average_rmse += abs(rmse_mean2[i])
-                    line.append(abs(mape_mean2[i]))
-                    average_mape += abs(mape_mean2[i])
-                    line.append(r2_mean2[i])
-                    average_r2_mean2 += r2_mean2[i]
-                    with open(filename, 'a+') as f_object:
-                        writer_object = writer(f_object,delimiter=";")
-                        writer_object.writerow(line)
-                        f_object.close()
+            average_mae = 0
+            average_rmse = 0
+            average_mape = 0
+            average_r2_mean2 = 0
+            average_mean_fit_time2 = 0
+            average_std_fit_time2 = 0
+            average_mean_score_time2 = 0
+            average_std_score_time2 = 0
+            for versions_ahead in VERSIONS_AHEAD:
+                # Print scores
+                mae_mean = np.asarray(results[project][versions_ahead][reg_type]['test_neg_mean_absolute_error']).mean()
+                mae_std = np.asarray(results[project][versions_ahead][reg_type]['test_neg_mean_absolute_error']).std()
+                mse_mean = np.asarray(results[project][versions_ahead][reg_type]['test_neg_mean_squared_error']).mean()
+                mse_std = np.asarray(results[project][versions_ahead][reg_type]['test_neg_mean_squared_error']).std()
+                mape_mean = np.asarray(
+                    results[project][versions_ahead][reg_type]['test_mean_absolute_percentage_error']).mean()
+                mape_std = np.asarray(
+                    results[project][versions_ahead][reg_type]['test_mean_absolute_percentage_error']).std()
+                r2_mean = np.asarray(results[project][versions_ahead][reg_type]['test_r2']).mean()
+                r2_std = np.asarray(results[project][versions_ahead][reg_type]['test_r2']).std()
+                rmse_mean = np.asarray(results[project][versions_ahead][reg_type]['test_root_mean_squared_error']).mean()
+                rmse_std = np.asarray(results[project][versions_ahead][reg_type]['test_root_mean_squared_error']).std()
+                # test_set_r2 = results[project][versions_ahead][reg_type]['test_set_r2']
+                fit_mean = np.asarray(results[project][versions_ahead][reg_type]['fit_time']).mean()
+                fit_std = np.asarray(results[project][versions_ahead][reg_type]['fit_time']).std()
+                score_mean = np.asarray(results[project][versions_ahead][reg_type]['score_time']).mean()
+                score_std = np.asarray(results[project][versions_ahead][reg_type]['score_time']).std()
 
-                    #print(abs(mae_mean2[i]),abs(rmse_mean2[i]),abs(mape_mean2[i]),r2_mean2[i],sep=';')                   
-                    #print('%0.3f,%0.3f,%0.3f,%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
+                print('%0.3f;%0.3f;%0.3f;%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
+            
                 line = []
                 line.append(EXP)
                 line.append(project)
                 #horizon
-                line.append("average")
+                line.append(str(versions_ahead))
                 #config
-                line.append(str(configs[i]))
-                line.append(average_mean_fit_time2/5)
-                line.append(average_std_fit_time2/5)
-                line.append(average_mean_score_time2/5)
-                line.append(average_std_score_time2/5)
-                line.append(average_mae/5)
-                line.append(average_rmse/5)
-                line.append(average_mape/5)
-                line.append(average_r2_mean2/5)
+                line.append(str(comb))
+                line.append(fit_mean)
+                line.append(fit_std)
+                line.append(score_mean)
+                line.append(score_std)
+                average_mean_fit_time2 += fit_mean
+                average_std_fit_time2 += fit_std
+                average_mean_score_time2 += score_mean
+                average_std_score_time2 += score_std
+                line.append(abs(mae_mean))
+                average_mae += abs(mae_mean)
+                line.append(abs(rmse_mean))
+                average_rmse += abs(rmse_mean)
+                line.append(abs(mape_mean))
+                average_mape += abs(mape_mean)
+                line.append(r2_mean)
+                average_r2_mean2 += r2_mean
                 with open(filename, 'a+') as f_object:
                     writer_object = writer(f_object,delimiter=";")
                     writer_object.writerow(line)
                     f_object.close()
+
+                #print(abs(mae_mean2[i]),abs(rmse_mean2[i]),abs(mape_mean2[i]),r2_mean2[i],sep=';')                   
+                #print('%0.3f,%0.3f,%0.3f,%0.3f' % (abs(mae_mean), abs(rmse_mean), abs(mape_mean), r2_mean))
+            line = []
+            line.append(EXP)
+            line.append(project)
+            #horizon
+            line.append("average")
+            #config
+            line.append(str(comb))
+            line.append(average_mean_fit_time2/5)
+            line.append(average_std_fit_time2/5)
+            line.append(average_mean_score_time2/5)
+            line.append(average_std_score_time2/5)
+            line.append(average_mae/5)
+            line.append(average_rmse/5)
+            line.append(average_mape/5)
+            line.append(average_r2_mean2/5)
+            with open(filename, 'a+') as f_object:
+                writer_object = writer(f_object,delimiter=";")
+                writer_object.writerow(line)
+                f_object.close()
 
 if __name__ == '__main__':
     # Selecting indicators that will be used as model variables
@@ -460,10 +410,30 @@ if __name__ == '__main__':
     #VERSIONS_AHEAD = [1,5]
     #main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,1,1)
     #for config in range(1,CONFIGS+1):
-    
+    batch_size = [5,10,15]
+    epochs = [100,500,1000,1500]
+    optimizer = ['adam']
+    learn_rate = [0.01,0.1,0.2]
+    activation = ['relu', 'tanh', 'sigmoid']
+    dropout_rate = [0.1,0.2,0.25]
+    neurons = [10,50,100,150,200]
+    layers = [1,2]
+
+    parameters_array = [batch_size,epochs,optimizer,learn_rate,activation,dropout_rate,neurons,layers]
+    list_paremeters = []
+    for p in itertools.product(*parameters_array):
+        list_paremeters.append(p)
+    print("combinacoes " + str(len(list_paremeters)))
     for exp in range(1,EXPERIMENTS+1):
         for dataset in DATASET_5_SPLIT:
             listDataset = []
-            listDataset.append(dataset) 
-            main(listDataset, WINDOW_SIZE, VERSIONS_AHEAD,exp)
+            listDataset.append(dataset)
+            for comb in list_paremeters:
+                    main(listDataset, WINDOW_SIZE, VERSIONS_AHEAD,exp,comb)
+              
+                #try:
+                 #   main(listDataset, WINDOW_SIZE, VERSIONS_AHEAD,exp,comb)
+                #except:
+                 #   print("An exception occurred " + str(comb))
+            
 
