@@ -429,11 +429,10 @@ if __name__ == '__main__':
             listDataset = []
             listDataset.append(dataset)
             for comb in list_paremeters:
+                  #  main(listDataset, WINDOW_SIZE, VERSIONS_AHEAD,exp,comb)
+                try:
                     main(listDataset, WINDOW_SIZE, VERSIONS_AHEAD,exp,comb)
-              
-                #try:
-                 #   main(listDataset, WINDOW_SIZE, VERSIONS_AHEAD,exp,comb)
-                #except:
-                 #   print("An exception occurred " + str(comb))
+                except:
+                   print("An exception occurred " + str(comb))
             
 
