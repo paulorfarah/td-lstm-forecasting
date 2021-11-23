@@ -386,17 +386,7 @@ if __name__ == '__main__':
 
     # 'AMC', 'WMC', 'DIT', 'NOC', 'RFC', 'CBO', 'Ca', 'Ce', 'CBM', 'IC', 'LCOM', 'LCOM3', 'CAM', 'NPM', 'DAM', 'MOA']
     # 'Security Index', 'blocker_violations', 'critical_violations', 'major_violations', 'minor_violations', 'info_violations']
-    DATASET_5_SPLIT = [
-               'apache_kafka_measures',
-               'apache_groovy_measures',
-               'apache_systemml_measures',
-               'commonsio_measures',
-               'company_projectA_measures',
-               'company_projectB_measures',
-               'google_guava_measures',
-               'jenkinsci_jenkins_measures',
-               'square_okhttp_measures',
-                ]
+    DATASET_5_SPLIT = ['apache_kafka_measures']
     DATASET_4_split = ['apache_ofbiz_measures', 'apache_nifi_measures', 'apache_incubator_dubbo_measures',
                        'square_retrofit_measures', 'spring-projects_spring-boot_measures', 'java_websocket_measures',
                        'zxing_zxing_measures', 'igniterealtime_openfire_measures']
