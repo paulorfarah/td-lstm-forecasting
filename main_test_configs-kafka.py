@@ -9,7 +9,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dropout
 from sklearn.utils import shuffle
 from tensorflow.keras.layers import Dense, Bidirectional
-from keras.layers.recurrent import LSTM, GRU
+from tensorflow.keras.layers.recurrent import LSTM, GRU
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import GridSearchCV
@@ -23,7 +23,7 @@ import time
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix, classification_report, roc_auc_score
 from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
-from keras import backend as K
+from tensorflow.keras import backend as K
 
 
 
