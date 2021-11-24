@@ -4,12 +4,11 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from tensorflow import keras 
-from keras.losses import mean_absolute_percentage_error
-from keras.models import Sequential
-from keras.layers import Dropout
+from tensorflow.keras.losses import mean_absolute_percentage_error
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dropout
 from sklearn.utils import shuffle
-from keras.layers import Dense, Bidirectional
+from tensorflow.keras.layers import Dense, Bidirectional
 from keras.layers.recurrent import LSTM, GRU
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
