@@ -9,7 +9,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dropout
 from sklearn.utils import shuffle
 from tensorflow.keras.layers import Dense, Bidirectional
-from tensorflow.keras.layers.recurrent import LSTM, GRU
+from tensorflow.keras.layers import LSTM, GRU
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import GridSearchCV
