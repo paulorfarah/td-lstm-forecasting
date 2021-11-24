@@ -179,11 +179,11 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,comb):
             pipeline = Pipeline([('regressor', regressor)])
         elif reg_type == 'ANN':
             # Fitting ANN to the dataset
-            from keras.wrappers.scikit_learn import KerasRegressor
+            from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
             regressor = KerasRegressor(build_fn=baseline_model, epochs=1000, batch_size=5, verbose=False)
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'LSTM':
-            from keras.wrappers.scikit_learn import KerasRegressor
+            from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
             regressor = KerasRegressor(build_fn=lstm_model,optimizer='adam', activation=comb[4],neurons = comb[6],learn_rate = comb[3], dropout_rate=comb[5], layers = comb[7],batch_size=comb[0],epochs=comb[1],verbose=False)
             # pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
             pipeline = Pipeline([('regressor', regressor)])
