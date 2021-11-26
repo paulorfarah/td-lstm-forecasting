@@ -401,12 +401,12 @@ if __name__ == '__main__':
     #main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,1,1)
     #for config in range(1,CONFIGS+1):
     batch_size = [5,10,15]
-    epochs = [100,500,1000,1500]
+    epochs = [100,500,1000]
     optimizer = ['adam']
     learn_rate = [0.01,0.1,0.2]
-    activation = ['relu', 'tanh', 'sigmoid']
+    activation = ['tahn']
     dropout_rate = [0.1,0.2,0.25]
-    neurons = [10,50,100,150,200]
+    neurons = [50,100,200]
     layers = [1,2]
 
     parameters_array = [batch_size,epochs,optimizer,learn_rate,activation,dropout_rate,neurons,layers]
