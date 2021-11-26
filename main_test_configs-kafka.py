@@ -411,6 +411,7 @@ if __name__ == '__main__':
 
     parameters_array = [batch_size,epochs,optimizer,learn_rate,activation,dropout_rate,neurons,layers]
     list_paremeters = []
+    print("gerando combinações ")
     for p in itertools.product(*parameters_array):
         list_paremeters.append(p)
     print("combinacoes " + str(len(list_paremeters)))
@@ -419,7 +420,6 @@ if __name__ == '__main__':
             listDataset = []
             listDataset.append(dataset)
             for comb in list_paremeters:
-                  #  main(listDataset, WINDOW_SIZE, VERSIONS_AHEAD,exp,comb)
                 try:
                     main(listDataset, WINDOW_SIZE, VERSIONS_AHEAD,exp,comb)
                 except:
