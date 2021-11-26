@@ -404,7 +404,7 @@ if __name__ == '__main__':
     epochs = [100,500,1000]
     optimizer = ['adam']
     learn_rate = [0.01,0.1,0.2]
-    activation = ['tahn']
+    activation = ['tanh']
     dropout_rate = [0.1,0.2,0.25]
     neurons = [50,100,200]
     layers = [1,2]
