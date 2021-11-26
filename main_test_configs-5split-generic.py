@@ -4,12 +4,12 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from keras.losses import mean_absolute_percentage_error
-from keras.models import Sequential
-from keras.layers import Dropout
+from tensorflow.keras.losses import mean_absolute_percentage_error
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dropout
 from sklearn.utils import shuffle
-from keras.layers import Dense, Bidirectional
-from keras.layers.recurrent import LSTM, GRU
+from tensorflow.keras.layers import Dense, Bidirectional
+from tensorflow.keras.layers import LSTM, GRU
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import GridSearchCV
@@ -17,13 +17,14 @@ from tensorflow.keras import optimizers
 import itertools
 #import csv
 from csv import writer
+import sys
 
 
 import time
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix, classification_report, roc_auc_score
 from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
-from keras import backend as K
+from tensorflow.keras import backend as K
 
 
 
@@ -179,11 +180,11 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,comb):
             pipeline = Pipeline([('regressor', regressor)])
         elif reg_type == 'ANN':
             # Fitting ANN to the dataset
-            from keras.wrappers.scikit_learn import KerasRegressor
+            from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
             regressor = KerasRegressor(build_fn=baseline_model, epochs=1000, batch_size=5, verbose=False)
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'LSTM':
-            from keras.wrappers.scikit_learn import KerasRegressor
+            from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
             regressor = KerasRegressor(build_fn=lstm_model,optimizer='adam', activation=comb[4],neurons = comb[6],learn_rate = comb[3], dropout_rate=comb[5], layers = comb[7],batch_size=comb[0],epochs=comb[1],verbose=False)
             # pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
             pipeline = Pipeline([('regressor', regressor)])
@@ -382,11 +383,13 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
                 f_object.close()
 
 if __name__ == '__main__':
+    dataset = sys.argv[1]
+
     # Selecting indicators that will be used as model variables
 
     # 'AMC', 'WMC', 'DIT', 'NOC', 'RFC', 'CBO', 'Ca', 'Ce', 'CBM', 'IC', 'LCOM', 'LCOM3', 'CAM', 'NPM', 'DAM', 'MOA']
     # 'Security Index', 'blocker_violations', 'critical_violations', 'major_violations', 'minor_violations', 'info_violations']
-    DATASET_5_SPLIT = ['apache_groovy_measures']
+    DATASET_5_SPLIT = [dataset]
     DATASET_4_split = ['apache_ofbiz_measures', 'apache_nifi_measures', 'apache_incubator_dubbo_measures',
                        'square_retrofit_measures', 'spring-projects_spring-boot_measures', 'java_websocket_measures',
                        'zxing_zxing_measures', 'igniterealtime_openfire_measures']
@@ -404,13 +407,14 @@ if __name__ == '__main__':
     epochs = [100,500,1000]
     optimizer = ['adam']
     learn_rate = [0.01,0.1,0.2]
-    activation = ['tahn']
+    activation = ['relu']
     dropout_rate = [0.1,0.2,0.25]
     neurons = [50,100,200]
     layers = [1,2]
 
     parameters_array = [batch_size,epochs,optimizer,learn_rate,activation,dropout_rate,neurons,layers]
     list_paremeters = []
+    print("gerando combinações ")
     for p in itertools.product(*parameters_array):
         list_paremeters.append(p)
     print("combinacoes " + str(len(list_paremeters)))
@@ -419,7 +423,6 @@ if __name__ == '__main__':
             listDataset = []
             listDataset.append(dataset)
             for comb in list_paremeters:
-                  #  main(listDataset, WINDOW_SIZE, VERSIONS_AHEAD,exp,comb)
                 try:
                     main(listDataset, WINDOW_SIZE, VERSIONS_AHEAD,exp,comb)
                 except:
