@@ -305,7 +305,7 @@ def print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, 
         #print(results[project][versions_ahead][reg_type])
         #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
        
-        filename = 'results-all-features/' + project + '-model-find' + '.csv'
+        filename = 'results/all-features/' + project + '-model-find' + '.csv'
 
         for reg_type in ['LSTM']:
             print('*************** %s **************' % reg_type)
