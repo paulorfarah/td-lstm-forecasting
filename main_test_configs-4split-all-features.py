@@ -100,33 +100,33 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,comb):
    #                       # 'comment_lines', 'ncloc', 'uncovered_lines', 'vulnerabilities', 'complexity',
     #                      'sqale_index', 'reliability_remediation_effort', 'security_remediation_effort']
     #'sqale_index', 'reliability_remediation_effort', 'security_remediation_effort'
-    METRIC_KEYS_SDK4ED = ['sqale_index','reliability_remediation_effort','security_remediation_effort',
-                            'bugs','reliability_rating','security_rating','vulnerabilities','code_smells','development_cost',
-                            'sqale_debt_ratio','sqale_rating','normalized_td','lines_to_cover','uncovered_lines','duplicated_blocks',
+    METRIC_KEYS_SDK4ED = ['sqale_index','reliability_remediation_effort','security_remediation_effort','bugs','duplicated_blocks','code_smells',
+                           # 'reliability_rating','security_rating','vulnerabilities','development_cost',
+                           # 'sqale_debt_ratio','sqale_rating','normalized_td','lines_to_cover','uncovered_lines',
                             'duplicated_files',
                             'classes',
-                             ##'directories',
-                             ##'files',
+                            'directories',
+                             'files',
                               'functions',
                              'lines',
-                            ## 'ncloc',
-                             ##'statements',
-                             ##'class_complexity',
-                             ##'cognitive_complexity',
-                             ##'complexity',
-                             ##'file_complexity',
-                           ##'comment_lines_density',
-                             ##'comment_lines',
-                            ##'duplicated_lines_density',
-                           # #'duplicated_lines',
-                            ##'function_complexity',
-                            ##'blocker_violations',
-                             ##'critical_violations', 
-                           ##'info_violations',
-                           ##'major_violations',
-                            ##'minor_violations',
-                           ## 'open_issues',
-                           ## 'violations'
+                             'ncloc',
+                            'statements',
+                             'class_complexity',
+                             'cognitive_complexity',
+                             'complexity',
+                             'file_complexity',
+                           'comment_lines_density',
+                             'comment_lines',
+                            'duplicated_lines_density',
+                           'duplicated_lines',
+                            'function_complexity',
+                            'blocker_violations',
+                             'critical_violations', 
+                           'info_violations',
+                           'major_violations',
+                            'minor_violations',
+                            'open_issues',
+                            'violations'
                             ]
     layerDimension = (len(METRIC_KEYS_SDK4ED) - 3) * 3
     varDimension = len(METRIC_KEYS_SDK4ED) - 2
@@ -242,14 +242,11 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,comb):
                   'root_mean_squared_error': make_scorer(root_mean_squared_error, greater_is_better=False)}
 
         if reg_type == 'LSTM':
-            # reshape from [samples, timesteps] into [samples, timesteps, features]
-            #imputer = SimpleImputer(strategy = 'median', fill_value = 0)
-            #imputer.fit(X)
             n_features = 1
             X = X.reshape((X.shape[0], X.shape[1], n_features))
       
        
-        scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False, verbose=False,error_score='raise')
+        scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False, verbose=False)
         
 
         # Fill results dict object
@@ -269,7 +266,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,comb):
             # Importing the dataset
             #coloca 3 colunas em uma so e dpois dropa essas 3 colunas
             dataset = pd.read_csv(project + '.csv', sep=";", usecols=METRIC_KEYS_SDK4ED)
-
+            dataset.to_csv('results/out.csv')  
             dataset['total_principal'] = dataset['reliability_remediation_effort'] + dataset[
                 'security_remediation_effort'] + dataset['sqale_index']
             dataset = dataset.drop(
@@ -444,10 +441,10 @@ if __name__ == '__main__':
             listDataset = []
             listDataset.append(dataset)
             for comb in list_paremeters:
-                try:
+                #try:
                     print(comb)
                     main(listDataset, WINDOW_SIZE, VERSIONS_AHEAD,exp,comb)
-                except:
-                   print("An exception occurred " + str(comb))
+              #  except:
+                #   print("An exception occurred " + str(comb))
             
 
