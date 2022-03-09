@@ -2,8 +2,11 @@
 import sys
 
 import numpy as np
+from numpy import inf
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn import impute
+from sklearn.impute import SimpleImputer
 from tensorflow.keras.losses import mean_absolute_percentage_error
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dropout
@@ -25,7 +28,6 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix, classification_report, roc_auc_score
 from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
 from tensorflow.keras import backend as K
-
 
 
 
@@ -97,12 +99,37 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,comb):
    # METRIC_KEYS_SDK4ED = ['bugs', 'duplicated_blocks', 'code_smells',
    #                       # 'comment_lines', 'ncloc', 'uncovered_lines', 'vulnerabilities', 'complexity',
     #                      'sqale_index', 'reliability_remediation_effort', 'security_remediation_effort']
-    METRIC_KEYS_SDK4ED = ['bugs','reliability_rating','reliability_remediation_effort','security_rating','security_remediation_effort','vulnerabilities','code_smells','development_cost',
-                            'effort_to_reach_maintainability_rating_a','sqale_debt_ratio','sqale_index','sqale_rating','normalized_td','coverage','line_coverage',
-                            'lines_to_cover','uncovered_lines','duplicated_blocks','duplicated_files','duplicated_lines','duplicated_lines_density','classes','comment_lines','comment_lines_density',
-                            'directories','files','functions','lines','ncloc','ncloc_language_distribution','statements','class_complexity','cognitive_complexity','complexity','file_complexity',
-                            'file_complexity_distribution','function_complexity','function_complexity_distribution','blocker_violations','confirmed_issues','critical_violations',
-                            'false_positive_issues','info_violations','major_violations','minor_violations','open_issues','reopened_issues','violations','wont_fix_issues']
+    #'sqale_index', 'reliability_remediation_effort', 'security_remediation_effort'
+    METRIC_KEYS_SDK4ED = ['sqale_index','reliability_remediation_effort','security_remediation_effort',
+                            'bugs','reliability_rating','security_rating','vulnerabilities','code_smells','development_cost',
+                            'sqale_debt_ratio','sqale_rating','normalized_td','lines_to_cover','uncovered_lines','duplicated_blocks',
+                            'duplicated_files',
+                            'classes',
+                             ##'directories',
+                             ##'files',
+                              'functions',
+                             'lines',
+                            ## 'ncloc',
+                             ##'statements',
+                             ##'class_complexity',
+                             ##'cognitive_complexity',
+                             ##'complexity',
+                             ##'file_complexity',
+                           ##'comment_lines_density',
+                             ##'comment_lines',
+                            ##'duplicated_lines_density',
+                           # #'duplicated_lines',
+                            ##'function_complexity',
+                            ##'blocker_violations',
+                             ##'critical_violations', 
+                           ##'info_violations',
+                           ##'major_violations',
+                            ##'minor_violations',
+                           ## 'open_issues',
+                           ## 'violations'
+                            ]
+    layerDimension = (len(METRIC_KEYS_SDK4ED) - 3) * 3
+    varDimension = len(METRIC_KEYS_SDK4ED) - 2
     results = {}
     results['_info'] = {'metrics': METRIC_KEYS_SDK4ED, 'window_size': WINDOW_SIZE, 'versions_ahead': VERSIONS_AHEAD}
 
@@ -133,16 +160,16 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,comb):
             opt = optimizers.Adam(learning_rate=learn_rate)
             if layers == 1:
                 model1 = Sequential()
-                model1.add(LSTM(neurons, input_shape=(138, 1), kernel_initializer='normal', activation=activation))
+                model1.add(LSTM(neurons, input_shape=(layerDimension, 1), kernel_initializer='normal', activation=activation))
                 model1.add(Dropout(dropout_rate))
                 model1.add(Dense(1, kernel_initializer='normal'))
                 model1.compile(loss='mean_squared_error', optimizer=opt)
                 return model1
             else:
                 model1 = Sequential()
-                model1.add(LSTM(neurons, input_shape=(138, 1), return_sequences=True, kernel_initializer='normal', activation=activation))
+                model1.add(LSTM(neurons, input_shape=(layerDimension, 1), return_sequences=True, kernel_initializer='normal', activation=activation))
                 model1.add(Dropout(dropout_rate))
-                model1.add(LSTM(neurons, input_shape=(138, 1), return_sequences=False, kernel_initializer='normal', activation=activation))
+                model1.add(LSTM(neurons, input_shape=(layerDimension, 1), return_sequences=False, kernel_initializer='normal', activation=activation))
                 model1.add(Dense(1, kernel_initializer='normal'))
                 model1.compile(loss='mean_squared_error', optimizer=opt)
                 return model1
@@ -191,8 +218,9 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,comb):
             pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
         elif reg_type == 'LSTM':
             from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
-            regressor = KerasRegressor(build_fn=lstm_model,optimizer='adam', activation=comb[4],neurons = comb[6],learn_rate = comb[3], dropout_rate=comb[5], layers = comb[7],batch_size=comb[0],epochs=comb[1],verbose=True)
+            regressor = KerasRegressor(build_fn=lstm_model,optimizer='adam', activation=comb[4],neurons = comb[6],learn_rate = comb[3], dropout_rate=comb[5], layers = comb[7],batch_size=comb[0],epochs=comb[1],verbose=False)
             # pipeline = Pipeline([('scaler', scaler), ('regressor', regressor)])
+            
             pipeline = Pipeline([('regressor', regressor)])
 
         from sklearn.model_selection import TimeSeriesSplit
@@ -215,10 +243,13 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,comb):
 
         if reg_type == 'LSTM':
             # reshape from [samples, timesteps] into [samples, timesteps, features]
+            #imputer = SimpleImputer(strategy = 'median', fill_value = 0)
+            #imputer.fit(X)
             n_features = 1
             X = X.reshape((X.shape[0], X.shape[1], n_features))
-           
-        scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False)
+      
+       
+        scores = cross_validate(estimator=pipeline, X=X, y=Y.ravel(), scoring=scorer, cv=tscv, return_train_score=False, verbose=False,error_score='raise')
         
 
         # Fill results dict object
@@ -238,6 +269,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,comb):
             # Importing the dataset
             #coloca 3 colunas em uma so e dpois dropa essas 3 colunas
             dataset = pd.read_csv(project + '.csv', sep=";", usecols=METRIC_KEYS_SDK4ED)
+
             dataset['total_principal'] = dataset['reliability_remediation_effort'] + dataset[
                 'security_remediation_effort'] + dataset['sqale_index']
             dataset = dataset.drop(
@@ -245,53 +277,35 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,comb):
 
             # Adding time-shifted prior and future period
             data = series_to_supervised(dataset.values, n_in=WINDOW_SIZE)
+           # print(data.head(1))
             # Append dependend variable column with value equal to next version's total_principal
             #print(data)
-            data['forecasted_total_principal'] = data['var47(t)'].shift(-versions_ahead)
+            data['forecasted_total_principal'] = data['var'+str(varDimension)+'(t)'].shift(-versions_ahead)
             data = data.drop(data.index[-versions_ahead:])
             # Remove total_cost from indpependent variables set
             #drop pra nao alienar o algoritmo (creio eu)
-            data = data.drop(columns=['var47(t-2)', 'var47(t-1)', 'var47(t)'])
+            data = data.drop(columns=['var'+str(varDimension)+'(t-2)', 'var'+str(varDimension)+'(t-1)','var'+str(varDimension)+'(t)'])
             
-          
-
+            #data = data.reset_index()
+            #df.replace([np.inf, -np.inf], np.nan).dropna(subset=["col1", "col2"], how="all")
+           
+           # print(data.columns)
+           # data.fillna(-1)
             # Set X, Y
             X = data.iloc[:, data.columns != 'forecasted_total_principal'].values
-            # Y = data.iloc[:, data.columns == 'forecasted_total_principal'].values
-            Y = data.forecasted_total_principal.values
+            Y = data.iloc[:, data.columns == 'forecasted_total_principal'].values
+          #  print(np.all(np.isfinite(X)))
+          #  print(np.any(np.isnan(X)))
+            
+           # np.savetxt("results/foo.csv", X, delimiter=",")
+            #Y = data.forecasted_total_principal.values
+           # print(X[:1])
             #for reg_type in ['LinearRegression', 'LassoRegression', 'RidgeRegression', 'SGDRegression', 'SVR_rbf', 'SVR_linear', 'RandomForestRegressor', 'LSTM']:
-            #teste com estrutura do melo
             for reg_type in ['LSTM']:
                 regressor = create_regressor(reg_type, X, Y, project, versions_ahead)
 
     print_forecasting_errors(VERSIONS_AHEAD, reg_type, results, versions_ahead, DATASET, EXP,comb)
 
-
-def read_dataset(VERSIONS_AHEAD, WINDOW_SIZE):
-    return read_td_dataset(VERSIONS_AHEAD, WINDOW_SIZE)
-
-
-def read_td_dataset(VERSIONS_AHEAD, WINDOW_SIZE):
-    METRIC_KEYS_SDK4ED = ['bugs', 'duplicated_blocks', 'code_smells',
-                          # 'comment_lines', 'ncloc', 'uncovered_lines', 'vulnerabilities', 'complexity',
-                          'sqale_index', 'reliability_remediation_effort', 'security_remediation_effort']
-
-    # Importing the dataset
-    dataset = pd.read_csv('apache_kafka_measures.csv', sep=";", usecols=METRIC_KEYS_SDK4ED)
-    dataset['total_principal'] = dataset['reliability_remediation_effort'] + dataset['security_remediation_effort'] + \
-                                 dataset['sqale_index']
-    dataset = dataset.drop(columns=['sqale_index', 'reliability_remediation_effort', 'security_remediation_effort'])
-    # Adding time-shifted prior and future period
-    data = series_to_supervised(dataset.values, n_in=WINDOW_SIZE)
-    # Append dependend variable column with value equal to next version's total_principal
-    data['forecasted_total_principal'] = data['var4(t)'].shift(-VERSIONS_AHEAD)
-    data = data.drop(data.index[-VERSIONS_AHEAD:])
-    # Include/remove TD as independent variable
-    data = data.drop(columns=['var4(t-2)', 'var4(t-1)'])
-    X = data.iloc[:, data.columns != 'forecasted_total_principal'].values
-    Y = data.iloc[:, data.columns == 'forecasted_total_principal'].values
-   
-    return X, Y, METRIC_KEYS_SDK4ED
 
 def append_new_line(file_name, row):
     with open(file_name, 'a+') as f_object:
@@ -431,6 +445,7 @@ if __name__ == '__main__':
             listDataset.append(dataset)
             for comb in list_paremeters:
                 try:
+                    print(comb)
                     main(listDataset, WINDOW_SIZE, VERSIONS_AHEAD,exp,comb)
                 except:
                    print("An exception occurred " + str(comb))
