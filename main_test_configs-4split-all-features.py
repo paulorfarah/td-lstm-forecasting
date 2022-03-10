@@ -101,32 +101,13 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,comb):
     #                      'sqale_index', 'reliability_remediation_effort', 'security_remediation_effort']
     #'sqale_index', 'reliability_remediation_effort', 'security_remediation_effort'
     METRIC_KEYS_SDK4ED = ['sqale_index','reliability_remediation_effort','security_remediation_effort','bugs','duplicated_blocks','code_smells',
-                           # 'reliability_rating','security_rating','vulnerabilities','development_cost',
-                           # 'sqale_debt_ratio','sqale_rating','normalized_td','lines_to_cover','uncovered_lines',
-                            'duplicated_files',
-                            'classes',
-                            'directories',
-                             'files',
-                              'functions',
-                             'lines',
-                             'ncloc',
-                            'statements',
-                             'class_complexity',
-                             'cognitive_complexity',
-                             'complexity',
-                             'file_complexity',
-                           'comment_lines_density',
-                             'comment_lines',
-                            'duplicated_lines_density',
-                           'duplicated_lines',
-                            'function_complexity',
-                            'blocker_violations',
-                             'critical_violations', 
-                           'info_violations',
-                           'major_violations',
-                            'minor_violations',
-                            'open_issues',
-                            'violations'
+                            'reliability_rating','security_rating','vulnerabilities','development_cost',
+                            'sqale_debt_ratio','sqale_rating','normalized_td','lines_to_cover','uncovered_lines',
+                            'duplicated_files',   'classes',  'directories', 'files','functions', 'lines',
+                             'ncloc', 'statements', 'class_complexity', 'cognitive_complexity','complexity','file_complexity',
+                           'comment_lines_density',  'comment_lines', 'duplicated_lines_density', 'duplicated_lines',
+                            'function_complexity', 'blocker_violations','critical_violations', 'info_violations', 'major_violations', 
+                             'minor_violations', 'open_issues','violations'
                             ]
     layerDimension = (len(METRIC_KEYS_SDK4ED) - 3) * 3
     varDimension = len(METRIC_KEYS_SDK4ED) - 2
@@ -441,10 +422,10 @@ if __name__ == '__main__':
             listDataset = []
             listDataset.append(dataset)
             for comb in list_paremeters:
-                #try:
+                try:
                     print(comb)
                     main(listDataset, WINDOW_SIZE, VERSIONS_AHEAD,exp,comb)
-              #  except:
-                #   print("An exception occurred " + str(comb))
+                except:
+                   print("An exception occurred " + str(comb))
             
 
