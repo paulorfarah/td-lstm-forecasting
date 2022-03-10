@@ -247,7 +247,7 @@ def main(DATASET, WINDOW_SIZE, VERSIONS_AHEAD,EXP,comb):
             # Importing the dataset
             #coloca 3 colunas em uma so e dpois dropa essas 3 colunas
             dataset = pd.read_csv(project + '.csv', sep=";", usecols=METRIC_KEYS_SDK4ED)
-            dataset.to_csv('results/out.csv')  
+           # dataset.to_csv('results/out.csv')  
             dataset['total_principal'] = dataset['reliability_remediation_effort'] + dataset[
                 'security_remediation_effort'] + dataset['sqale_index']
             dataset = dataset.drop(
